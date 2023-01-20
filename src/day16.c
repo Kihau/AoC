@@ -488,22 +488,10 @@ void day16(FILE *input) {
 
     // printf("Original graph:\n");
     // print_valves(valves, valves_len);
-    generate_graph(valves, valves_len, start, "graph.png", true);
+    // generate_graph(valves, valves_len, start, "graph.png", true);
 
-    printf("Simplified closest node graph:\n");
-    simplify_paths_closest(&valves, &valves_len, start);
-    for (int i = 0; i < valves_len; i++) {
-        Valve v = valves[i];
-        if (v.name[0] == 'A' && v.name[1] == 'A') {
-            start = i;
-            break;
-        }
-    }
-    generate_graph(valves, valves_len, start, "graph-close.png", true);
-    print_valves(valves, valves_len);
-
-    // printf("Simplified all-to-all graph:\n");
-    // simplify_paths_all(&valves, &valves_len, start);
+    // printf("Simplified closest node graph:\n");
+    // simplify_paths_closest(&valves, &valves_len, start);
     // for (int i = 0; i < valves_len; i++) {
     //     Valve v = valves[i];
     //     if (v.name[0] == 'A' && v.name[1] == 'A') {
@@ -511,6 +499,18 @@ void day16(FILE *input) {
     //         break;
     //     }
     // }
+    // generate_graph(valves, valves_len, start, "graph-close.png", true);
+    // print_valves(valves, valves_len);
+
+    // printf("Simplified all-to-all graph:\n");
+    simplify_paths_all(&valves, &valves_len, start);
+    for (int i = 0; i < valves_len; i++) {
+        Valve v = valves[i];
+        if (v.name[0] == 'A' && v.name[1] == 'A') {
+            start = i;
+            break;
+        }
+    }
     // print_valves(valves, valves_len);
     // generate_graph(valves, valves_len, start, "graph-all.png", true);
     
