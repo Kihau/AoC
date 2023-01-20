@@ -1,8 +1,8 @@
 #include "all_days.h"
 
 #define MAP_HEIGHT 41
-#define MAP_WIDTH 77
-// #define MAP_HEIGHT 41
+#define MAP_WIDTH 101
+// #define MAP_WIDTH 77
 #define DISTANCE_INF -1
 #define QUEUE_CAPACITY MAP_HEIGHT * MAP_WIDTH
 
@@ -61,11 +61,15 @@ static void print_visitmap(const int visit_map[MAP_HEIGHT][MAP_WIDTH]) {
     }
 }
 
-// Yeah... I'm not doing it... Let the printing be wrong, this is in the TODO territory
-#define TEST(x, y) map[y][x] - map[p.y][p.x] <= 1
+#define TEST_PATH_BACKWARDS(pos_x, pos_y)                                                          \
+    curr - 1 == visit_map[pos_y][pos_x] && map[p.y][p.x] - map[pos_y][pos_x] <= 1
+
+#define TEST_PATH(pos_x, pos_y)                                                                    \
+    curr - 1 == visit_map[pos_y][pos_x] && map[pos_y][pos_x] - map[p.y][p.x] <= 1
 
 static void print_map_path(
-    const char map[MAP_HEIGHT][MAP_WIDTH], const int visit_map[MAP_HEIGHT][MAP_WIDTH], Pos p
+    const char map[MAP_HEIGHT][MAP_WIDTH], const int visit_map[MAP_HEIGHT][MAP_WIDTH], Pos p, 
+    bool draw_backwards
 ) {
     int curr = visit_map[p.y][p.x];
     while (curr > 0) {
@@ -77,15 +81,27 @@ static void print_map_path(
         attron(COLOR_PAIR(2));
         refresh();
 
-        if (p.y - 1 >= 0 && curr - 1 == visit_map[p.y - 1][p.x]) {
-            p.y--;
-        } else if (p.y + 1 < MAP_HEIGHT && curr - 1 == visit_map[p.y + 1][p.x]) {
-            p.y++;
-        } else if (p.x - 1 >= 0 && curr - 1 == visit_map[p.y][p.x - 1]) {
-            p.x--;
-        } else if (p.x + 1 < MAP_WIDTH && curr - 1 == visit_map[p.y][p.x + 1]) {
-            p.x++;
-        }
+        if (draw_backwards) {
+            if (p.y - 1 >= 0 && TEST_PATH_BACKWARDS(p.x, p.y - 1)) {
+                p.y--;
+            } else if (p.y + 1 < MAP_HEIGHT && TEST_PATH_BACKWARDS(p.x, p.y + 1)) {
+                p.y++;
+            } else if (p.x - 1 >= 0 && TEST_PATH_BACKWARDS(p.x - 1, p.y)) {
+                p.x--;
+            } else if (p.x + 1 < MAP_WIDTH && TEST_PATH_BACKWARDS(p.x + 1, p.y)) {
+                p.x++;
+            }
+        } else {
+            if (p.y - 1 >= 0 && TEST_PATH(p.x, p.y - 1)) {
+                p.y--;
+            } else if (p.y + 1 < MAP_HEIGHT && TEST_PATH(p.x, p.y + 1)) {
+                p.y++;
+            } else if (p.x - 1 >= 0 && TEST_PATH(p.x - 1, p.y)) {
+                p.x--;
+            } else if (p.x + 1 < MAP_WIDTH && TEST_PATH(p.x + 1, p.y)) {
+                p.x++;
+            }
+        } 
 
         curr--;
     }
@@ -99,7 +115,10 @@ static void print_map_path(
     move(MAP_HEIGHT, 0);
 }
 
-static void print_visitmap_path(const int visit_map[MAP_HEIGHT][MAP_WIDTH], Pos p) {
+static void print_visitmap_path(
+    const char map[MAP_HEIGHT][MAP_WIDTH], const int visit_map[MAP_HEIGHT][MAP_WIDTH], Pos p, 
+    bool draw_backwards
+) {
     int curr = visit_map[p.y][p.x];
 
     while (curr > 0) {
@@ -111,15 +130,27 @@ static void print_visitmap_path(const int visit_map[MAP_HEIGHT][MAP_WIDTH], Pos 
         printw("%3i", visit_map[p.y][p.x]);
         attron(COLOR_PAIR(2));
 
-        if (p.y - 1 >= 0 && curr - 1 == visit_map[p.y - 1][p.x]) {
-            p.y--;
-        } else if (p.y + 1 < MAP_HEIGHT && curr - 1 == visit_map[p.y + 1][p.x]) {
-            p.y++;
-        } else if (p.x - 1 >= 0 && curr - 1 == visit_map[p.y][p.x - 1]) {
-            p.x--;
-        } else if (p.x + 1 < MAP_WIDTH && curr - 1 == visit_map[p.y][p.x + 1]) {
-            p.x++;
-        }
+        if (draw_backwards) {
+            if (p.y - 1 >= 0 && TEST_PATH_BACKWARDS(p.x, p.y - 1)) {
+                p.y--;
+            } else if (p.y + 1 < MAP_HEIGHT && TEST_PATH_BACKWARDS(p.x, p.y + 1)) {
+                p.y++;
+            } else if (p.x - 1 >= 0 && TEST_PATH_BACKWARDS(p.x - 1, p.y)) {
+                p.x--;
+            } else if (p.x + 1 < MAP_WIDTH && TEST_PATH_BACKWARDS(p.x + 1, p.y)) {
+                p.x++;
+            }
+        } else {
+            if (p.y - 1 >= 0 && TEST_PATH(p.x, p.y - 1)) {
+                p.y--;
+            } else if (p.y + 1 < MAP_HEIGHT && TEST_PATH(p.x, p.y + 1)) {
+                p.y++;
+            } else if (p.x - 1 >= 0 && TEST_PATH(p.x - 1, p.y)) {
+                p.x--;
+            } else if (p.x + 1 < MAP_WIDTH && TEST_PATH(p.x + 1, p.y)) {
+                p.x++;
+            }
+        } 
 
         curr--;
     }
@@ -191,8 +222,8 @@ static int find_shortest_path(
     }
 
 #if NCURSES
-    print_map_path(map, visit_map, end);
-    print_visitmap_path(visit_map, end);
+    print_map_path(map, visit_map, end, true);
+    print_visitmap_path(map, visit_map, end, true);
     refresh();
     if (visit_map[end.y][end.x] != DISTANCE_INF) {
         getchar();
@@ -203,9 +234,9 @@ static int find_shortest_path(
 }
 
 #define TEST_AND_MODIFY_POS_BACKWARDS(pos)                                                         \
-    if (visit_map[pos.y][pos.x] == DISTANCE_INF && map[cur.y][cur.x] - map[pos.y][pos.x] <= 1       \
+    if (visit_map[pos.y][pos.x] == DISTANCE_INF && map[cur.y][cur.x] - map[pos.y][pos.x] <= 1      \
         /* HACK: Simplification based on the input. Remove check below if the output is wrong */   \
-        /* && !(map[pos.y][pos.x] == 'a' && map[cur.y][cur.x] == 'c') */) {                              \
+        /* && !(map[pos.y][pos.x] == 'a' && map[cur.y][cur.x] == 'c') */) {                        \
         visit_map[pos.y][pos.x] = visit_map[cur.y][cur.x] + 1;                                     \
         queue.data[queue.end++] = pos;                                                             \
     }
@@ -216,12 +247,12 @@ static int find_closest_reachable_a(
     visit_map[start.y][start.x] = 0;
 
     Queue queue = { 
-        .end = 0,
         .start = 0,
+        .end = 0,
     };
     queue.data[queue.end++] = start;
 
-    Pos end;
+    Pos end = { -1, -1 };
     while (queue.start != queue.end && queue.end != QUEUE_CAPACITY) {
         // Dequeue first element.
         Pos cur = queue.data[queue.start++];
@@ -264,8 +295,8 @@ static int find_closest_reachable_a(
     }
 
 #if NCURSES
-    print_map_path(map, visit_map, end);
-    print_visitmap_path(visit_map, end);
+    print_map_path(map, visit_map, end, false);
+    print_visitmap_path(map, visit_map, end, false);
     refresh();
     if (visit_map[end.y][end.x] != DISTANCE_INF) {
         getchar();

@@ -132,13 +132,13 @@ static int drop_sand_floor(char **map, const Pos len, const Pos original_pos) {
             // Fall down
             sand_pos.y++;
         } else if (map[sand_pos.y + 1][sand_pos.x - 1] == AIR) {
+            // Fall left
             sand_pos.y++;
             sand_pos.x--;
-            // Fall left
         } else if (map[sand_pos.y + 1][sand_pos.x + 1] == AIR) {
+            // Fall right
             sand_pos.y++;
             sand_pos.x++;
-            // Fall right
         } else {
             // Sand no longer moves
             map[sand_pos.y][sand_pos.x] = SAND;
@@ -161,13 +161,13 @@ static int drop_sand_void(char **map, const Pos len, const Pos original_pos) {
             // Fall down
             sand_pos.y++;
         } else if (map[sand_pos.y + 1][sand_pos.x - 1] == AIR) {
+            // Fall left
             sand_pos.y++;
             sand_pos.x--;
-            // Fall left
         } else if (map[sand_pos.y + 1][sand_pos.x + 1] == AIR) {
+            // Fall right
             sand_pos.y++;
             sand_pos.x++;
-            // Fall right
         } else {
             // Sand no longer moves
             map[sand_pos.y][sand_pos.x] = SAND;

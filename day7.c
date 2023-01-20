@@ -120,7 +120,7 @@ static void compute_listing(FILE *input, Directory *dir) {
     // When no subdirs are detected I cant calculate the overall content size
     while (fgets(buffer, sizeof(buffer), input)) {
         if (buffer[0] == '$') {
-            fseek(input, last_pos, 0);
+            fseek(input, last_pos, SEEK_SET);
             return;
         } else if (buffer[0] == 'd') {
             // ptr + 01234........

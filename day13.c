@@ -1,7 +1,7 @@
 #include "all_days.h"
 #include <stdio.h>
 
-#define MAX_SUBPACKETS 32
+#define MAX_SUBPACKETS 8
 
 typedef enum {
     RIGHT_ORDER,
@@ -32,7 +32,7 @@ static Packet *parse_packet(char **buffer) {
     int index = 0;
 
     while (**buffer) {
-        char c = *(*buffer)++;;
+        char c = *(*buffer)++;
         if (c == '[') {
             // Start a new sub packet 
             Packet *subpacket = parse_packet(buffer);
@@ -74,7 +74,7 @@ static Packet *parse_packet(char **buffer) {
     assert(false && "How did you even get here? Was the input correct?");
 }
 
-static void free_packet(Packet *packet) {
+static void free_packet(Packet packet[]) {
     for (int i = 0; i < packet->len; i++) {
         if (packet->type[i] == SUBPACKET) {
             free_packet(packet->content[i].subpacket);
@@ -82,6 +82,22 @@ static void free_packet(Packet *packet) {
     }
     free(packet);
 }
+
+/* FRISK:
+[6,[6,[1,8],[8,10,0,8,5]],[[7],7]],[[],0,[[8,9,8],1,3,[]]]
+[[[6,2,6,4,5],3,[0],[9]],4],[],[5,1,[[]],[3,[10,1,10,5,10]]]
+*/
+
+/*
+- [[5,[[0],6,[7,8,7,5],[4,8,7,7],10],[0,9,[4,9,9,6,3],[6],4],[[8,9],3,[]]],[[]],[0,[[10,10,5,8,5],2,7,0,[3]],[2,[4,6,5,1,6],[7,10,10,4],7]]] vs [[5,0],[[[6,3,5],[3],[8,1,5],5,9],[6],[2,0],2,[10]],[]]
+    - [5, [[0],6,[7,8,7,5],[4,8,7,7],10], [0,9,[4,9,9,6,3],[6],4], [[8,9],3,[]]] vs [5, 0]
+        - 5 vs 5
+        - 0 vs [[0],6,[7,8,7,5],[4,8,7,7],10] 
+            - 0 vs [0]
+            - [0] vs [0]
+            - 0 vs 0
+        - [5, 0] run out of items
+*/
 
 static COMP_RES compare_packets(Packet *p1, Packet *p2) { 
     int i = 0;
@@ -125,7 +141,7 @@ static COMP_RES compare_packets(Packet *p1, Packet *p2) {
     assert(false && "Unreachable code detected");
 }
 
-static int perfnt_sort(Packet **packets, int len) {
+static int perfnt_sort(Packet *packets[], int len) {
     int first_pos = len - 1;
     int second_pos = len - 2;
     for (int i = 0; i < len; i++) {
@@ -188,6 +204,7 @@ void day13(FILE *input) {
     packets[packets_count++] = parse_packet(&second);
 
     int decoder_key = perfnt_sort(packets, packets_count);
+    // int decoder_key;
 
     for (int i = 0; i < packets_count; i++) {
         free_packet(packets[i]);
