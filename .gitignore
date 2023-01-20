@@ -3,4 +3,4 @@
 build/**
 lib/**
 
-aoc
+compile_commands.json

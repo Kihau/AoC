@@ -59,10 +59,10 @@ void run_all_days(const char *path) {
 int main(int argc, char **argv) {
     clock_t total_time = clock();
 #if DUMMY
-    const char *path = "dummy-inputs/dummy";
+    const char *path = "inputs/dummy/dummy";
 #else
-    const char *path = "my-inputs/input";
-    // const char *path = "frisk-inputs/input";
+    const char *path = "inputs/kihau/input";
+    // const char *path = "inputs/frisk/input";
 #endif
     
     if (argc > 1) {

@@ -1,6 +1,9 @@
-OUTPUT := aoc
-SRC := main.c day1.c day2.c day3.c day4.c day5.c day6.c day7.c day8.c day9.c day10.c day11.c \
-	   day12.c day13.c day14.c day15.c day16.c day17.c day18.c
+
+OUTPUT := build/aoc
+SRC := src/main.c src/day1.c src/day2.c src/day3.c src/day4.c src/day5.c src/day6.c src/day7.c \
+	   src/day8.c src/day9.c src/day10.c src/day11.c src/day12.c src/day13.c src/day14.c \
+	   src/day15.c src/day16.c src/day17.c src/day18.c
+INCLUDE := "-Iinclude/"
 
 CC := clang
 CFLAGS := -g -Wall -Wextra -Wfloat-equal -fstack-protector
@@ -8,7 +11,8 @@ DFLAGS := -DNCURSES=true -DDUMMY=true
 LDFLAGS := -lm -lncurses
 
 all: 
-	$(CC) $(SRC) $(CFLAGS) $(LDFLAGS) $(DFLAGS) -o $(OUTPUT)
+	cp -r inputs/ build/
+	$(CC) $(INCLUDE) $(SRC) $(CFLAGS) $(LDFLAGS) $(DFLAGS) -o $(OUTPUT)
 
 install:
 	@echo "Wait what? Whould would you install something like this???"
