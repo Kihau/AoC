@@ -6,10 +6,6 @@
 #define DISTANCE_INF -1
 #define QUEUE_CAPACITY MAP_HEIGHT * MAP_WIDTH
 
-#ifndef NCURSES
-#define NCURSES true
-#endif
-
 typedef struct {
     int x;
     int y;

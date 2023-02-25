@@ -7,7 +7,7 @@ OUTPUT := aoc
 SRC := $(wildcard src/*.c)
 OBJ := $(patsubst src/%.c, build/%.o, $(SRC))
 
-INCLUDE := "-Iinclude/"
+INCLUDE := -Iinclude/
 
 CC := clang
 CFLAGS := -g -Wall -Wextra -Wfloat-equal -fstack-protector

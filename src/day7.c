@@ -156,9 +156,33 @@ static long find_part1_sum(Directory *dir) {
     return sum;
 }
 
+static long find_part1_sum_stack(Directory *dir) {
+    long sum = 0;
+
+    Directory **dir_stack = malloc(512 * sizeof(Directory *));
+    int stack_len = 0;
+
+    dir_stack[stack_len++] = dir;
+
+    while (stack_len != 0) {
+        stack_len -= 1;
+        Directory *curr = dir_stack[stack_len];
+
+        if (curr->content_size <= MAX_DELETE_SIZE)
+            sum += curr->content_size;
+
+        for (int i = 0; i < curr->subdirs_len; i++) {
+            dir_stack[stack_len++] = curr->subdirs[i];
+        }
+    }
+
+    free(dir_stack);
+    return sum;
+}
+
 static long find_min_dirsize(Directory *dir, const long min_del, int curr_min) {
     if (dir->content_size < curr_min && dir->content_size > min_del)
-        curr_min =  dir->content_size;
+        curr_min = dir->content_size;
 
     for (int i = 0; i < dir->subdirs_len; i++) {
         curr_min = find_min_dirsize(dir->subdirs[i], min_del, curr_min);
@@ -202,6 +226,7 @@ void day7(FILE *input) {
     // This is pretty cool :)
     print_directory_tree(root);
     long total_size = find_part1_sum(root);
+    // long total_size = find_part1_sum_stack(root);
     long min_dir_size = find_part2_dirsize(root);
 
     printf("PART 1: Total (most) size = %li\n", total_size);

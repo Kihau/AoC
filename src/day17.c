@@ -1,5 +1,4 @@
 #include "all_days.h"
-#include <stdio.h>
 
 // #define BLOCKS_COUNT 2022
 #define BLOCKS_COUNT 10000
@@ -26,7 +25,7 @@ typedef struct {
 
 typedef unsigned char u8;
 
-void print_map(u8 map[], int map_len) {
+static void print_map(u8 map[], int map_len) {
     // Printing in reverse order
     for (int i = map_len - 1; i >= 0; i--) {
         printf("|");
@@ -45,7 +44,7 @@ void print_map(u8 map[], int map_len) {
 /*
  * pos here -> ####...
  */
-bool hline_overlapping(const u8 map[], const Pos p) {
+static bool hline_overlapping(const u8 map[], const Pos p) {
     return p.x < 0 || p.x + 3 >= 7 || p.y < 0 || 
         one(p.y + 0, p.x + 0) || 
         one(p.y + 0, p.x + 1) || 
@@ -54,7 +53,7 @@ bool hline_overlapping(const u8 map[], const Pos p) {
 
 }
 
-int place_hline(u8 map[], const Pos p) {
+static int place_hline(u8 map[], const Pos p) {
     set(p.y + 0, p.x + 0);
     set(p.y + 0, p.x + 1);
     set(p.y + 0, p.x + 2);
@@ -66,7 +65,7 @@ int place_hline(u8 map[], const Pos p) {
  *             ###
  * pos here -> .#.
  */
-bool plus_overlapping(const u8 map[], const Pos p) {
+static bool plus_overlapping(const u8 map[], const Pos p) {
     return p.x < 0 || p.x + 2 >= 7 || p.y < 0 ||
         one(p.y + 0, p.x + 1) || 
         one(p.y + 1, p.x + 0) ||
@@ -75,7 +74,7 @@ bool plus_overlapping(const u8 map[], const Pos p) {
         one(p.y + 2, p.x + 1);
 }
 
-int place_plus(u8 map[], const Pos p) {
+static int place_plus(u8 map[], const Pos p) {
     set(p.y + 0, p.x + 1);
     set(p.y + 1, p.x + 0);
     set(p.y + 1, p.x + 1);
@@ -89,7 +88,7 @@ int place_plus(u8 map[], const Pos p) {
  *             #
  * pos here -> #
  */
-bool vline_overlapping(const u8 map[], const Pos p) {
+static bool vline_overlapping(const u8 map[], const Pos p) {
     return p.x < 0 || p.x + 0 >= 7 || p.y < 0 ||
         one(p.y + 0, p.x + 0) || 
         one(p.y + 1, p.x + 0) ||
@@ -97,7 +96,7 @@ bool vline_overlapping(const u8 map[], const Pos p) {
         one(p.y + 3, p.x + 0);
 }
 
-int place_vline(u8 map[], const Pos p) {
+static int place_vline(u8 map[], const Pos p) {
     set(p.y + 0, p.x + 0);
     set(p.y + 1, p.x + 0);
     set(p.y + 2, p.x + 0);
@@ -110,7 +109,7 @@ int place_vline(u8 map[], const Pos p) {
  *               #
  * pos here -> ###
  */
-bool revl_overlapping(const u8 map[], const Pos p) {
+static bool revl_overlapping(const u8 map[], const Pos p) {
     return p.x < 0 || p.x + 2 >= 7 || p.y < 0 ||
         one(p.y + 0, p.x + 0) ||
         one(p.y + 0, p.x + 1) ||
@@ -119,7 +118,7 @@ bool revl_overlapping(const u8 map[], const Pos p) {
         one(p.y + 2, p.x + 2);
 }
 
-int place_revl(u8 map[], const Pos p) {
+static int place_revl(u8 map[], const Pos p) {
     set(p.y + 0, p.x + 0);
     set(p.y + 0, p.x + 1);
     set(p.y + 0, p.x + 2);
@@ -131,7 +130,7 @@ int place_revl(u8 map[], const Pos p) {
 /*             ##
  * pos here -> ##
  */
-bool box_overlapping(const u8 map[], const Pos p) {
+static bool box_overlapping(const u8 map[], const Pos p) {
     return p.x < 0 || p.x + 1 >= 7 || p.y < 0 ||
         one(p.y + 0, p.x + 0) ||
         one(p.y + 0, p.x + 1) ||
@@ -139,7 +138,7 @@ bool box_overlapping(const u8 map[], const Pos p) {
         one(p.y + 1, p.x + 1);
 }
 
-int place_box(u8 map[], const Pos p) {
+static int place_box(u8 map[], const Pos p) {
     set(p.y + 0, p.x + 0);
     set(p.y + 0, p.x + 1);
     set(p.y + 1, p.x + 0);
@@ -147,7 +146,7 @@ int place_box(u8 map[], const Pos p) {
     return p.y + 2;
 }
 
-bool block_overlapping(int block, const u8 map[], const Pos p) {
+static bool block_overlapping(int block, const u8 map[], const Pos p) {
     bool overlapping = false;
     switch (block) {
         case HLINE: overlapping = hline_overlapping(map, p); break;
@@ -160,7 +159,7 @@ bool block_overlapping(int block, const u8 map[], const Pos p) {
     return overlapping;
 }
 
-int place_block(int block, u8 map[], const Pos p) {
+static int place_block(int block, u8 map[], const Pos p) {
     int placed_height;
     switch (block) {
         case HLINE: placed_height = place_hline(map, p); break;
@@ -173,65 +172,7 @@ int place_block(int block, u8 map[], const Pos p) {
     return placed_height;
 }
 
-int find_height(u8 map[], FILE *input) {
-    int height = 0;
-    BlockType block = HLINE;
-    for (int i = 0; i < BLOCKS_COUNT; i++) {
-        // Fall down loop
-        int placed_height = -1;
-
-        Pos p = {
-            .x = 2,
-            .y = height + 3, 
-        };
-        
-        while (true) {
-            char wind = fgetc(input);
-
-            if (feof(input) || (wind != '>' && wind != '<')){
-                printf("reapeted! b: %4i     h: %4i     i: %4i\n", block, height, i);
-                fseek(input, 0, SEEK_SET);
-                wind = fgetc(input);
-            }
-            int shift = 0;
-
-            if (wind == '>')
-                shift = 1;
-            else if (wind == '<')
-                shift = -1;
-
-            p.x += shift;
-            if (block_overlapping(block, map, p)) {
-                p.x -= shift;
-            }
-
-            p.y -= 1;
-            if (block_overlapping(block, map, p)) { 
-                p.y += 1;
-                placed_height = place_block(block, map, p);
-
-                break;
-            }
-        }
-
-        if (placed_height > height) {
-            height = placed_height;
-        }
-
-        // if (height < 20) {
-        //     printf("\n");
-        //     print_map(map, height + 3);
-        //     printf("h = %i\n", height);
-        // }
-
-        block += 1;
-        if (block > BOX)
-            block = HLINE;
-    }
-    return height;
-}
-
-int find_height_blocks(u8 map[], FILE *input, int blocks, int height) {
+static int find_height_blocks(u8 map[], FILE *input, int blocks, int height) {
     fseek(input, 0, SEEK_SET);
     BlockType block = HLINE;
     for (int i = 0; i < blocks; i++) {
@@ -248,6 +189,7 @@ int find_height_blocks(u8 map[], FILE *input, int blocks, int height) {
 
             if (feof(input) || (wind != '>' && wind != '<')){
                 printf("reapeted! b: %4i     h: %4i     i: %4i\n", block, height, i);
+                // DANK
                 fseek(input, 0, SEEK_SET);
                 wind = fgetc(input);
             }
@@ -289,6 +231,10 @@ int find_height_blocks(u8 map[], FILE *input, int blocks, int height) {
     return height;
 }
 
+static int find_height(u8 map[], FILE *input) {
+    return find_height_blocks(map, input, BLOCKS_COUNT, 0);
+}
+
 
 // TODO: Full ncurses animation
 void day17(FILE *input) {
@@ -301,32 +247,35 @@ void day17(FILE *input) {
 
 #if 1 // Changing this to 0 displays adjust values
     // TODO: NOT COMPLETE: This only works for my input. For other inputs values have to be adjusted manually.
+    // MAX_MAP_HEIGHT size should be based on the input
     u8 *map = malloc(MAX_MAP_HEIGHT);
-
-    // those need to be adjusted
+    
+    // Those need to be manually adjusted (for now)
+    
+    // Kihau
     const int h_start = 2642;
     const int i_start = 1709;
     const int h_rep = (5336 - 2642);
     const int i_rep = (3434 - 1709);
+    
+    // Dummy
+    // const int h_start = 70;
+    // const int i_start = 43;
+    // const int h_rep = (123 - 70);
+    // const int i_rep = (78 - 43);
 
     long h = h_start;
     long i = i_start;
 
-    while (i + i_rep < max) {
-        h += h_rep;
-        i += i_rep;
-    }
-
-    printf("h rep: %i, i rep: %i\n", h_rep, i_rep);
+    long iter_count =  max / i_rep;
+    h += iter_count * h_rep;
+    i += iter_count * i_rep;
 
     i -= i_start;
     h -= h_start;
-    long left = max - i;
-    printf("h: %li, i: %li\n", h, i);
-    printf("blocks left: %li\n", left);
+    long i_left = max - i;
 
-    int height_end =  find_height_blocks(map, input, left, 0);
-    printf("height end: %i\n", height_end);
+    int height_end = find_height_blocks(map, input, i_left, 0);
     printf("height: %li\n", height_end + h);
 
     free(map);

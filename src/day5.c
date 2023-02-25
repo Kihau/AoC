@@ -1,5 +1,4 @@
 #include "all_days.h"
-#include <string.h>
 
 #define STACK_COUNT 9
 

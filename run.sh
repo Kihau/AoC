@@ -1,15 +1,22 @@
 #!/bin/sh
 
-# Builds and runs the code
-if [ "$2" == "" ]; then
-    RUNOPTS=$1
-else
-    MAKEOPTS=$1
-    if [ "$2" != "all" ]; then
-        RUNOPTS=$2
-    fi
+if [ "$1" == "clean" ]; then
+    bear -- make clean
+    shift
 fi
 
-bear -- make $MAKEOPTS 
-cd build/
-./aoc $RUNOPTS
+# Builds and runs the code
+if [ "$1" != "" ]; then
+    if [ "$1" != "-" ]; then
+        MAKEOPTS=$1
+    fi
+    bear -- make $MAKEOPTS
+fi 
+
+if [ "$2" != "" ]; then
+    if [ "$2" != "-" ]; then
+        RUNOPTS=$2
+    fi
+    cd build/
+    ./aoc $RUNOPTS
+fi

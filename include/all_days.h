@@ -6,7 +6,22 @@
 #include <string.h>
 #include <math.h>
 #include <stdint.h>
-#include <curses.h>
+
+#ifndef DUMMY
+    #define DUMMY false
+#endif
+
+#ifndef NCURSES
+    #define NCURSES true
+#endif
+
+#if NCURSES
+    #include <curses.h>
+#else
+    #define printw printf
+#endif
+
+// TODO: Custom assert that exits to main?
 
 void day1(FILE *input);
 void day2(FILE *input);

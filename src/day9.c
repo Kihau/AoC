@@ -1,17 +1,5 @@
 #include "all_days.h"
 
-// You can set NCURSES to test how the rope behaves, but the actual output is generated when the 
-// value is set to 0
-#ifndef NCURSES
-#define NCURSES true
-#endif
-
-#if NCURSES
-#include <curses.h>
-#else
-#define printw printf
-#endif
-
 typedef struct {
     char dir;
     int len;
@@ -188,9 +176,6 @@ static void from_input_file(
             part1[t1.y][t1.x] = true;
             Pos t2 = rope->knots[KNOTS_COUNT - 1];
             part2[t2.y][t2.x] = true;
-
-            // printf("%c %i %i\n", m.dir, m.len, i);
-            // print_state(killme2, &rope);
         }
     }
 }

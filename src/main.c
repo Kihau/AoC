@@ -2,7 +2,8 @@
 
 void (*days[]) (FILE *) = {
     day1, day2, day3, day4, day5, day6, day7, day8, day9, day10, 
-    day11, day12, day13, day14, day15, day16, day17, day18
+    day11, day12, day13, day14, day15, day16, day17, day18, day19,
+    day20, day21, day22
 };
 
 void print_benchmark(const char* prompt, clock_t time) {
@@ -49,10 +50,6 @@ void run_all_days(const char *path) {
     }
 }
 
-#ifndef DUMMY
-#define DUMMY false
-#endif
-
 // NOTICE:
 //     This code assumes that the input is CORRECT and UNMODIFIED. 
 //     Any incorrect input might cause an unexpected crash of the program.
@@ -63,13 +60,15 @@ int main(int argc, char **argv) {
 #else
     const char *path = "inputs/kihau/input";
     // const char *path = "inputs/frisk/input";
+    // const char *path = "inputs/miosh/input";
+    // const char *path = "inputs/filip/input";
 #endif
     
     if (argc > 1) {
         run_one_day(path, atoi(argv[1]));
     } else {
-        // run_one_day(path, 17);
-        run_all_days(path);
+        run_one_day(path, 21);
+        // run_all_days(path);
     }
 
     print_benchmark("\n------\nFinished in ", clock() - total_time);

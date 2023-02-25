@@ -1,17 +1,19 @@
 #include "all_days.h"
-#include <stdio.h>
-#include <string.h>
 
 typedef struct {
     char name[3];
     int flow_rate;
-    // Don't have this. Store realased flow_rates as a separeate value and increment it every minute
-    // bool released;
     int connections[16];
     int travel_times[16];
     int conn_len;
-
 } Valve;
+
+typedef struct {
+    int index;
+    int time;
+    int opened_valves;
+    int pressure;
+} SearchState;
 
 static int valve_index(const Valve valves[], const int valves_len, char name[2]) {
     for (int i = 0; i < valves_len; i++) {
@@ -87,6 +89,7 @@ static void simplify_paths_closest(Valve **valves, int *valves_len, int start) {
     int *queue = malloc(64 * sizeof(int));
 
     int *map = malloc(64 * sizeof(int));
+
     {
         int map_idx = 0;
         for (int i = 0; i < *valves_len; i++) {
@@ -97,39 +100,42 @@ static void simplify_paths_closest(Valve **valves, int *valves_len, int start) {
     }
 
     for (int i = 0; i < *valves_len; i++) {
-        if (v[i].flow_rate != 0 || i == start) {
-            strcpy(new_valves[new_len].name, v[i].name);
-            new_valves[new_len].flow_rate = v[i].flow_rate;
-            new_len++;
+        if (v[i].flow_rate == 0 && i != start) {
+            continue;
+        }
 
-            memset(visited, -1, 64 * sizeof(int));
-            visited[i] = 1;
+        strcpy(new_valves[new_len].name, v[i].name);
+        new_valves[new_len].flow_rate = v[i].flow_rate;
+        new_len++;
 
-            int start = 0;
-            int end = 0;
+        memset(visited, -1, 64 * sizeof(int));
+        visited[i] = 1;
 
-            queue[end++] = i;
+        int start = 0;
+        int end = 0;
 
-            while (start != end) {
-                int vdx = queue[start++];
+        queue[end++] = i;
 
-                for (int j = 0; j < v[vdx].conn_len; j++) {
-                    int con = v[vdx].connections[j];
-                    if (visited[con] == -1) {
-                        visited[con] = visited[vdx] + 1;
-                        
-                        if (v[con].flow_rate > 0) {
-                            Valve *nv = &new_valves[map[i]];
-                            nv->connections[nv->conn_len] = map[con];
-                            nv->travel_times[nv->conn_len] = visited[vdx];
-                            nv->conn_len++;
-                        } else queue[end++] = con; // The search only continues when the closest
-                    }                              // connected non-zero flow node wasn't reached
+        while (start != end) {
+            int vdx = queue[start++];
+
+            for (int j = 0; j < v[vdx].conn_len; j++) {
+                int con = v[vdx].connections[j];
+                if (visited[con] != -1) {
+                    continue;
                 }
+                visited[con] = visited[vdx] + 1;
+
+                if (v[con].flow_rate > 0) {
+                    Valve *nv = &new_valves[map[i]];
+                    nv->connections[nv->conn_len] = map[con];
+                    nv->travel_times[nv->conn_len] = visited[vdx];
+                    nv->conn_len++;
+                } else queue[end++] = con; // The search only continues when the closest
             }
         }
     }
-    
+
     free(map);
     free(queue);
     free(visited);
@@ -210,7 +216,7 @@ static void simplify_paths_all(Valve **valves, int *valves_len, int start) {
 }
 
 // Uses graphviz to generate a visual graph
-void generate_graph(const Valve valves[], int valves_len, int start, const char *output, bool bigraph) {
+static void generate_graph(const Valve valves[], int valves_len, int start, const char *output, bool bigraph) {
 #define BIGRAPH false
     FILE *graph = fopen("graph.dot", "w");
     assert(graph && "Something went wrong");
@@ -258,7 +264,7 @@ void generate_graph(const Valve valves[], int valves_len, int start, const char 
     // system("dot -Tpng graph.dot > graph.png");
 }
 
-void print_valves(const Valve valves[], int valves_len) {
+static void print_valves(const Valve valves[], int valves_len) {
     for (int i = 0; i < valves_len; i++) {
         Valve v = valves[i];
         printf("name: %s, flow: %02i, conns: [", v.name, v.flow_rate);
@@ -277,14 +283,7 @@ void print_valves(const Valve valves[], int valves_len) {
     printf("\n");
 }
 
-typedef struct {
-    int index;
-    int time;
-    int opened_valves;
-    int pressure;
-} SearchState;
-
-int search_path(const Valve valves[], SearchState *search_stack, int stack_size, int max_time) {
+static int search_path(const Valve valves[], SearchState *search_stack, int stack_size, int max_time) {
     int max_pressure = 0;
 
     while (stack_size != 0) {
@@ -329,7 +328,7 @@ int search_path(const Valve valves[], SearchState *search_stack, int stack_size,
     return max_pressure;
 }
 
-int find_maximum_pressure(const Valve valves[], int start, int max_time) {
+static int find_maximum_pressure(const Valve valves[], int start, int max_time) {
     SearchState search_stack[64];
     int stack_size = 0;
 
@@ -359,7 +358,7 @@ int find_maximum_pressure(const Valve valves[], int start, int max_time) {
     return max_pressure;
 }
 
-void trace_valves(const Valve valves[], int start, int time) {
+static void trace_valves(const Valve valves[], int start, int time) {
     SearchState trace[16] = {};
     int trace_len = 1;
 
@@ -409,7 +408,7 @@ void trace_valves(const Valve valves[], int start, int time) {
     printf("%s]\n", valves[trace[trace_len - 1].index].name);
 }
 
-int find_maximum_pressure_old(const Valve valves[], int start, int max_time) {
+static int find_maximum_pressure_old(const Valve valves[], int start, int max_time) {
     SearchState search_stack[64];
     // SearchState *search_stack = malloc(64 * sizeof(SearchState));
     int stack_len = 0;
@@ -468,6 +467,133 @@ int find_maximum_pressure_old(const Valve valves[], int start, int max_time) {
     return max_pressure;
 }
 
+static int find_maximum_pressure_elephant(const Valve valves[], SearchState start_state, int max_time) {
+    SearchState search_stack[64];
+    // SearchState *search_stack = malloc(64 * sizeof(SearchState));
+    int stack_len = 0;
+
+    search_stack[stack_len++] = start_state;
+
+    int max_pressure = 0;
+    while (stack_len != 0) {
+        // Pop the element from the stack
+        stack_len -= 1;
+        const SearchState state = search_stack[stack_len];
+
+        if (state.time == max_time) {
+            if (state.pressure > max_pressure)
+                max_pressure = state.pressure;
+            continue;
+        }
+
+        int len_before = stack_len;
+        Valve v = valves[state.index];
+        for (int i = 0; i < v.conn_len; i++) {
+            SearchState new_state = state;
+
+            int con_idx = v.connections[i];
+            // Trave time + time required to open the valve (1 minute)
+            int con_time = v.travel_times[i] + 1;
+            Valve con = valves[con_idx];
+
+            if (state.opened_valves & (1 << con_idx) || state.time + con_time >= max_time) {
+                continue;
+            }
+
+            new_state.index = con_idx;
+            new_state.time += con_time;
+            new_state.opened_valves |= (1 << con_idx);
+            new_state.pressure += (max_time - new_state.time) * con.flow_rate;
+
+            search_stack[stack_len++] = new_state;
+        }
+
+        // If no new states were added to the stack, mark previous state as "finished" and push it
+        // onto the stack
+        if (stack_len == len_before) {
+            SearchState new_state = state;
+            new_state.time = max_time;
+            search_stack[stack_len++] = new_state;
+        }
+    }
+
+    return max_pressure;
+}
+
+static int find_maximum_pressure_p2(const Valve valves[], int start, int max_time) {
+    SearchState search_stack[64];
+    // SearchState *search_stack = malloc(64 * sizeof(SearchState));
+    int stack_len = 0;
+
+    SearchState initial_state =  {
+        .index = start,
+        .time = 0,
+        .pressure = 0,
+        .opened_valves = 0,
+    };
+    search_stack[stack_len++] = initial_state;
+
+    int max_pressure = 0;
+    while (stack_len != 0) {
+        // Pop the element from the stack
+        stack_len -= 1;
+        const SearchState state = search_stack[stack_len];
+
+        // HACK: This if statement is here to not run this for 10 years. Might not work for some inputs
+        if (state.time > 16 && state.time < 20) {
+            SearchState elephant = {
+                .index = start,
+                .time = 0,
+                .pressure = 0,
+                .opened_valves = state.opened_valves,
+            };
+            int elephant_pressure = find_maximum_pressure_elephant(valves, elephant, max_time);
+
+            if (state.pressure + elephant_pressure > max_pressure)
+                max_pressure = state.pressure + elephant_pressure;
+        }
+
+        if (state.time == max_time) {
+            continue;
+        }
+
+        int len_before = stack_len;
+        Valve v = valves[state.index];
+        for (int i = 0; i < v.conn_len; i++) {
+            SearchState new_state = state;
+
+            int con_idx = v.connections[i];
+            // Trave time + time required to open the valve (1 minute)
+            int con_time = v.travel_times[i] + 1;
+            Valve con = valves[con_idx];
+
+            if (state.opened_valves & (1 << con_idx) || state.time + con_time >= max_time) {
+                continue;
+            }
+
+            new_state.index = con_idx;
+            new_state.time += con_time;
+            new_state.opened_valves |= (1 << con_idx);
+            new_state.pressure += (max_time - new_state.time) * con.flow_rate;
+
+            search_stack[stack_len++] = new_state;
+        }
+
+        // If no new states were added to the stack, mark previous state as "finished" and push it
+        // onto the stack
+        if (stack_len == len_before) {
+            SearchState new_state = state;
+            new_state.time = max_time;
+            search_stack[stack_len++] = new_state;
+        }
+    }
+
+    return max_pressure;
+}
+
+
+
+
 void day16(FILE *input) {
     Valve *valves = malloc(sizeof(Valve) * 64);
     int valves_len = 0;
@@ -502,7 +628,7 @@ void day16(FILE *input) {
     // generate_graph(valves, valves_len, start, "graph-close.png", true);
     // print_valves(valves, valves_len);
 
-    // printf("Simplified all-to-all graph:\n");
+    printf("Simplified all-to-all graph:\n");
     simplify_paths_all(&valves, &valves_len, start);
     for (int i = 0; i < valves_len; i++) {
         Valve v = valves[i];
@@ -511,12 +637,13 @@ void day16(FILE *input) {
             break;
         }
     }
-    // print_valves(valves, valves_len);
-    // generate_graph(valves, valves_len, start, "graph-all.png", true);
+    print_valves(valves, valves_len);
+    generate_graph(valves, valves_len, start, "graph-all.png", true);
     
     int part1 = find_maximum_pressure(valves, start, 30);
-    // int part2 = find_maximum_pressure(valves, start, 26);
     printf("PART1: Max pressure = %i\n", part1);
+    int part2 = find_maximum_pressure_p2(valves, start, 26);
+    printf("PART@: Max pressure with elephant = %i\n", part2);
 
     free(valves);
 }
