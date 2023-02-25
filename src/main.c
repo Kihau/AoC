@@ -1,4 +1,5 @@
 #include "all_days.h"
+#include <string.h>
 
 void (*days[]) (FILE *) = {
     day1, day2, day3, day4, day5, day6, day7, day8, day9, day10, 
@@ -29,7 +30,7 @@ void run_one_day(const char* path, int day_number) {
     
     printf("\n--- DAY %i ---\n", day_number);
     char path_buffer[64];
-    int res = snprintf(path_buffer, sizeof(path_buffer), "%s%i.txt", path, day_number);
+    int res = snprintf(path_buffer, sizeof(path_buffer), "%s/input%i.txt", path, day_number);
     assert(res > 0 && res < (int)sizeof(path_buffer) && "Failed to write to the buffer");
 
     clock_t start = clock();
@@ -55,19 +56,28 @@ void run_all_days(const char *path) {
 //     Any incorrect input might cause an unexpected crash of the program.
 int main(int argc, char **argv) {
     clock_t total_time = clock();
-#if DUMMY
-    const char *path = "inputs/dummy/dummy";
-#else
-    const char *path = "inputs/kihau/input";
-    // const char *path = "inputs/frisk/input";
-    // const char *path = "inputs/miosh/input";
-    // const char *path = "inputs/filip/input";
-#endif
+
+    int day_number = 0;
+    const char *path = "inputs/kihau";
     
-    if (argc > 1) {
-        run_one_day(path, atoi(argv[1]));
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "-p") == 0) {
+            // Expect path to input as a next arguments
+            i += 1;
+            assert(i < argc && "You must provide path to input file");
+            path = argv[i];
+        } else {
+            // If other flags are not found, input is the day number
+            day_number = atoi(argv[i]);
+        }
+    }
+
+    if (day_number != 0) {
+        run_one_day(path, day_number);
     } else {
+        // Debugging
         run_one_day(path, 21);
+
         // run_all_days(path);
     }
 
