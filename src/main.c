@@ -1,27 +1,51 @@
+#include "Timer.h"
 #include "all_days.h"
-#include <string.h>
 
 void (*days[]) (FILE *) = {
-    day1, day2, day3, day4, day5, day6, day7, day8, day9, day10, 
-    day11, day12, day13, day14, day15, day16, day17, day18, day19,
-    day20, day21, day22
+    day1,  day2,  day3,  day4,  day5,  day6,  day7,  day8,  day9,  day10, 
+    day11, day12, day13, day14, day15, day16, day17, day18, day19, day20,
+    day21, day22, //day23, day24, day25
 };
 
-void print_benchmark(const char* prompt, clock_t time) {
-    printf("%s", prompt);
+// struct timespec timer_start() {
+//     struct timespec time;
+//     clock_gettime(CLOCK_REALTIME, &time);
+//     return time;
+// }
+//
+// struct timespec timer_stop(struct timespec time_before) {
+//     struct timespec time_now;
+//     clock_gettime(CLOCK_REALTIME, &time_now);
+//
+//     struct timespec elapsed = {
+//         .tv_sec = time_now.tv_sec - time_before.tv_sec,
+//         .tv_nsec = time_now.tv_nsec - time_before.tv_nsec,
+//     };
+//     return elapsed;
+// }
+//
+// // This can be a macro
+// void print_benchmark(const char* prompt, struct timespec elapsed) {
+//     printf("%s", prompt);
+//
+//     double time = 0;
+//     if (elapsed.tv_sec > 0) {
+//         time += elapsed.tv_sec;
+//         time += (double)elapsed.tv_nsec / 1000000000; 
+//         printf("%lfs\n", time);
+//     } else if (elapsed.tv_nsec / 1000000) {
+//         time += (double)elapsed.tv_nsec / 1000000;
+//         printf("%lfms\n", time);
+//     } else if (elapsed.tv_nsec / 1000) {
+//         time += (double)elapsed.tv_nsec / 1000;
+//         printf("%lfμs\n", time);
+//     } else {
+//         time += (double)elapsed.tv_nsec;
+//         printf("%lfns\n", time);
+//     }
+// }
 
-    if (time / 1000000)
-        printf("%fs\n", (float)time / 1000000);
-    else if (time / 1000)
-        printf("%fms\n", (float)time / 1000);
-    else printf("%liμs\n", time);
-    // else if (time)
-    //     printf("%liμs\n", time);
-    // else 
-    //     printf("%lins\n", time);
-}
-
-void run_one_day(const char* path, int day_number) {
+void run_one_day(const char *path, int day_number) {
     int number_of_days = sizeof(days) / sizeof(*days);
     assert(
         day_number - 1 < number_of_days && day_number > 0 &&
@@ -33,14 +57,15 @@ void run_one_day(const char* path, int day_number) {
     int res = snprintf(path_buffer, sizeof(path_buffer), "%s/input%i.txt", path, day_number);
     assert(res > 0 && res < (int)sizeof(path_buffer) && "Failed to write to the buffer");
 
-    clock_t start = clock();
+    Timer timer = timer_new();
 
     FILE *input_file = fopen(path_buffer, "r");
     assert(input_file != NULL && "Could not open input file");
     days[day_number - 1](input_file);
     fclose(input_file);
 
-    print_benchmark("Executed in ", clock() - start);
+    timer_stop(&timer);
+    timer_print("Executed in ", timer);
 }
 
 void run_all_days(const char *path) {
@@ -55,16 +80,19 @@ void run_all_days(const char *path) {
 //     This code assumes that the input is CORRECT and UNMODIFIED. 
 //     Any incorrect input might cause an unexpected crash of the program.
 int main(int argc, char **argv) {
-    clock_t total_time = clock();
+    timer_init();
+
+    Timer total = timer_new();
 
     int day_number = 0;
-    const char *path = "inputs/kihau";
+    const char *path = "inputs/dummy";
     
+    // TODO: When argc is zero, run help command and exit the program
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-p") == 0) {
             // Expect path to input as a next arguments
             i += 1;
-            assert(i < argc && "You must provide path to input file");
+            assert(i < argc && "You must provide path to an input file");
             path = argv[i];
         } else {
             // If other flags are not found, input is the day number
@@ -76,12 +104,13 @@ int main(int argc, char **argv) {
         run_one_day(path, day_number);
     } else {
         // Debugging
-        run_one_day(path, 21);
+        run_one_day(path, 22);
 
         // run_all_days(path);
     }
 
-    print_benchmark("\n------\nFinished in ", clock() - total_time);
+    timer_stop(&total);
+    timer_print("\n------\nFinished in ", total);
 
     return 0;
 }

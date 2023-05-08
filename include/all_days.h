@@ -1,3 +1,6 @@
+#ifndef ALL_DAYS_H
+#define ALL_DAYS_H
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -6,6 +9,14 @@
 #include <string.h>
 #include <math.h>
 #include <stdint.h>
+#include <signal.h>
+
+// Rdtsc
+#ifdef _WIN32
+#include <intrin.h>
+#else
+#include <x86intrin.h>
+#endif
 
 #ifndef DUMMY
     #define DUMMY false
@@ -20,6 +31,16 @@
 #else
     #define printw printf
 #endif
+
+typedef char i8;
+typedef short i16;
+typedef int i32;
+typedef long i64;
+
+typedef unsigned char u8;
+typedef unsigned short u16;
+typedef unsigned int u32;
+typedef unsigned long u64;
 
 // TODO: Custom assert that exits to main?
 
@@ -50,3 +71,5 @@ void day22(FILE *input);
 void day23(FILE *input);
 void day24(FILE *input);
 void day25(FILE *input);
+
+#endif // ALL_DAYS_H
