@@ -3,14 +3,14 @@
 // TODO: Scan the input, don't hardcode it
 //
 // Real inputs - 50x50 chunk each
-// #define CHUNK_SIZE 50
-// #define MAP_WIDTH 3
-// #define MAP_HEIGHT 4
+#define CHUNK_SIZE 50
+#define MAP_WIDTH 3
+#define MAP_HEIGHT 4
 
 // Dummy
-#define CHUNK_SIZE 4
-#define MAP_WIDTH 4
-#define MAP_HEIGHT 3
+// #define CHUNK_SIZE 4
+// #define MAP_WIDTH 4
+// #define MAP_HEIGHT 3
 
 typedef struct {
     // int start;
@@ -56,7 +56,7 @@ Vec vec_new(int cap) {
 }
 
 // Scan the input to determine the chunk size as well as map width and height
-int get_biggest_chunk_size() {
+int get_biggest_chunk_size(void) {
     assert(false && "Not implemented yet");
 }
 
@@ -144,20 +144,20 @@ void free_map_lines(Lines lines) {
     free(lines.data);
 }
 
-// void fill_chunk_map(bool chunk_map[MAP_HEIGHT][MAP_WIDTH], const Lines *lines) {
-//     for (int y = 0; y < MAP_HEIGHT; y++) {
-//         for (int x = 0; x < MAP_WIDTH; x++) {
-//             int y_line = y * CHUNK_SIZE;
-//             int x_line = x * CHUNK_SIZE + 1;
-//
-//             Vec line = lines->data[y_line];
-//             if (line.length > x_line && line.data[x_line] != ' ') {
-//                 // printf("%i %i : %s\n", y_line, x_line, line->data);
-//                 chunk_map[y][x] = true;
-//             }
-//         }
-//     }
-// }
+void fill_chunk_map(bool chunk_map[MAP_HEIGHT][MAP_WIDTH], const Lines *lines) {
+    for (int y = 0; y < MAP_HEIGHT; y++) {
+        for (int x = 0; x < MAP_WIDTH; x++) {
+            int y_line = y * CHUNK_SIZE;
+            int x_line = x * CHUNK_SIZE + 1;
+
+            Vec line = lines->data[y_line];
+            if (line.length > x_line && line.data[x_line] != ' ') {
+                // printf("%i %i : %s\n", y_line, x_line, line->data);
+                chunk_map[y][x] = true;
+            }
+        }
+    }
+}
 
 void print_chunk_ncurses(char *chunk, int y_offset, int x_offset) {
     for (int y = 0; y < CHUNK_SIZE; y++) {
@@ -194,9 +194,13 @@ void print_map_ncurses(char *chunk_map[MAP_WIDTH * MAP_HEIGHT]) {
 char *create_chunk(const Lines *lines, const int y_start, const int x_start) {
     char *chunk = malloc(CHUNK_SIZE * CHUNK_SIZE);
     for (int y = 0; y < CHUNK_SIZE; y++) {
+        assert(y + y_start < lines->length && "The line is out of bounds");
         Vec line = lines->data[y + y_start];
+
         for (int x = 0; x < CHUNK_SIZE; x++) {
             // printf("y: %i x: %i\n", y * CHUNK_SIZE, x);
+            assert(x + x_start < lines->length && "The line is out of bounds");
+            assert(y * CHUNK_SIZE + x < CHUNK_SIZE * CHUNK_SIZE && "Chunk is out of bounds");
             chunk[y * CHUNK_SIZE + x] = line.data[x + x_start];
         }
     }
@@ -470,10 +474,9 @@ int traverse_map(const char *chunk_map[MAP_HEIGHT * MAP_WIDTH], const Vec *input
         // Start traversing the chunks
         while (move.steps > 0) {
             const char *chunk = chunk_map[state.chunk_idx];
-            // bool out_of_bounds = traverse_chunk(chunk, &state, &move);
-            bool out_of_bounds = traverse_chunk_ncurses(chunk_map, chunk, &state, &move);
+            bool out_of_bounds = traverse_chunk(chunk, &state, &move);
+            // bool out_of_bounds = traverse_chunk_ncurses(chunk_map, chunk, &state, &move);
             if (out_of_bounds) {
-
                 int new_chunk_idx = get_new_chunk_index(chunk_map, &state);
                 const char *new_chunk = chunk_map[new_chunk_idx];
 
@@ -502,12 +505,37 @@ int traverse_map(const char *chunk_map[MAP_HEIGHT * MAP_WIDTH], const Vec *input
     return password;
 }
 
+
+static void debug_print(Lines *lines) {
+    bool chunk_map[MAP_HEIGHT][MAP_WIDTH] = {};
+    fill_chunk_map(chunk_map, lines);
+
+    printf("\nThe chunks are:\n");
+    for (int i = 0; i < MAP_HEIGHT * MAP_WIDTH; i++) {
+        char *chunk = chunk_map[i];
+        if (chunk) {
+            print_chunk(chunk);
+            printf("\n");
+        }
+    }
+
+    printf("The map is:\n");
+    for (int y = 0; y < MAP_HEIGHT; y++) {
+        for (int x = 0; x < MAP_WIDTH; x++) {
+            char *chunk = chunk_map[y * MAP_WIDTH + x];
+            printf("%i ", chunk ? 1 : 0);
+        }
+        printf("\n");
+    }
+    printf("\n");
+}
+
 void day22(FILE *input) { 
-    initscr();
-    noecho();
-    start_color();
-    init_pair(1, COLOR_RED, COLOR_BLACK);
-    init_pair(2, COLOR_WHITE, COLOR_BLACK);
+    // initscr();
+    // noecho();
+    // start_color();
+    // init_pair(1, COLOR_RED, COLOR_BLACK);
+    // init_pair(2, COLOR_WHITE, COLOR_BLACK);
 
     Lines lines = read_map_lines(input);
     // printf("len is = %i\n", lines.length);
@@ -523,37 +551,16 @@ void day22(FILE *input) {
     // printf("%i : %s\n", input_moves.capacity, input_moves.data);
 
     int part1_password = traverse_map(chunk_map, &input_moves);
-    getch();
+    // getch();
 
-    // bool chunk_map[MAP_HEIGHT][MAP_WIDTH] = {};
-    // fill_chunk_map(chunk_map, &lines);
-
-    // printf("\nThe chunks are:\n");
-    // for (int i = 0; i < MAP_HEIGHT * MAP_WIDTH; i++) {
-    //     char *chunk = chunk_map[i];
-    //     if (chunk) {
-    //         print_chunk(chunk);
-    //         printf("\n");
-    //     }
-    // }
-    //
-    // printf("The map is:\n");
-    // for (int y = 0; y < MAP_HEIGHT; y++) {
-    //     for (int x = 0; x < MAP_WIDTH; x++) {
-    //         char *chunk = chunk_map[y * MAP_WIDTH + x];
-    //         printf("%i ", chunk ? 1 : 0);
-    //     }
-    //     printf("\n");
-    // }
-    // printf("\n");
-
+    // debug_print(&lines);
 
     // TODO: More free here
     // Free all data
     vec_free(input_moves);
     free_map_lines(lines);
 
-    endwin();
+    // endwin();
 
     printf("PART 1: Calculated password = %i\n", part1_password);
 }

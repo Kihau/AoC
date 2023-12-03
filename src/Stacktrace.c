@@ -6,7 +6,7 @@ typedef struct String {
     int cap;
 } String;
 
-static String string_new() {
+static String string_new(void) {
     String buffer = {
         .buffer = (char *)malloc(1024), 
         .size = 0, 
@@ -35,17 +35,16 @@ static void string_printf(String *string, const char *fmt, ...) {
     va_end(args);
 }
 
-char *stacktrace_get_string() {
+char *stacktrace_get_string(void) {
     StacktraceHandle trace = stacktrace_get();
     char *output = stacktrace_to_string(trace);
     free(trace);
     return output;
 }
 
-
 #if defined(_WIN32)
 
-StacktraceHandle stacktrace_get() {
+StacktraceHandle stacktrace_get(void) {
     HANDLE process = GetCurrentProcess();
     HANDLE thread = GetCurrentThread();
     CONTEXT context;
@@ -91,7 +90,6 @@ StacktraceHandle stacktrace_get() {
 #else
 #error "Platform is not supported!"
 #endif
-
     while (true) {
         StacktraceEntry *cur = ret + i++;
         if (i == STACKTRACE_MAX_DEPTH) {
@@ -164,7 +162,7 @@ char *stacktrace_to_string(StacktraceHandle handle) {
 
 #elif defined(__APPLE__)
 
-StacktraceHandle stacktrace_get() {
+StacktraceHandle stacktrace_get(void) {
     Stacktrace *trace = (Stacktrace *)malloc(sizeof(Stacktrace));
     trace->trace_size = backtrace(trace->trace, STACKTRACE_MAX_DEPTH);
     return trace;
@@ -186,65 +184,65 @@ char *stacktrace_to_string(StacktraceHandle h) {
 
 #elif defined(__linux__)
 
-StacktraceHandle stacktrace_get() {
+StacktraceHandle stacktrace_get(void) {
     Stacktrace *stack = (Stacktrace *)malloc(sizeof(Stacktrace));
     stack->trace_size = backtrace(stack->trace, STACKTRACE_MAX_DEPTH);
     return stack;
 }
 
-char *stacktrace_to_string(StacktraceHandle handle) {
-    const Stacktrace *stack = handle;
-    char **messages = backtrace_symbols(stack->trace, stack->trace_size);
-    String output = string_new();
+char *stacktrace_to_string_pad(StacktraceHandle handle, char *padding) {
+    char **symbols = backtrace_symbols(handle->trace, handle->trace_size);
+    String string = string_new();
 
-    for (int i = 0; i < stack->trace_size; ++i) {
-        void *tracei = stack->trace[i];
-        char *msg = messages[i];
+    for (int i = 0; i < handle->trace_size; ++i) {
+        void *trace = handle->trace[i];
+        char *symbol = symbols[i];
 
         // Calculate the load offset.
         Dl_info info;
-        dladdr(tracei, &info);
+        dladdr(trace, &info);
         if (info.dli_fbase == (void *)0x400000) {
             // Don't offset address from the executable.
             info.dli_fbase = NULL;
         }
 
-        while (*msg && *msg != '(') {
-            ++msg;
+        while (*symbol && *symbol != '(') {
+            ++symbol;
         }
-        *msg = 0;
+        *symbol = 0;
 
-        {
-            char cmd[1024];
-            snprintf(
-                cmd, 1024, "addr2line -e %s -f -C -p %p 2>/dev/null", messages[i],
-                // ?????????????????
-                (void *)((char *)tracei - (char *)info.dli_fbase)
-            );
+        char cmd[1024];
+        snprintf(
+            cmd, 1024, "addr2line -e %s -f -C -p %p 2>/dev/null", symbols[i],
+            (void *)(trace - info.dli_fbase)
+        );
 
-            FILE *fp = popen(cmd, "r");
-            if (!fp) {
-                string_printf(&output, "Failed to generate trace further...\n");
-                break;
-            }
-
-            char line[2048];
-            while (fgets(line, sizeof(line), fp)) {
-                string_printf(&output, "%s: ", messages[i]);
-                if (strstr(line, "?? ")) {
-                    // Output address if nothing was found.
-                    string_printf(&output, "%p\n", tracei);
-                } else {
-                    string_printf(&output, "%s", line);
-                }
-            }
-
-            pclose(fp);
+        FILE *process = popen(cmd, "r");
+        if (!process) {
+            string_printf(&string, "Failed to generate trace further...\n");
+            break;
         }
+
+        char line[2048];
+        while (fgets(line, sizeof(line), process)) {
+            string_printf(&string, "%s%s: ", padding, symbols[i]);
+            if (strstr(line, "?? ")) {
+                // Output address if nothing was found.
+                string_printf(&string, "%p\n", trace);
+            } else {
+                string_printf(&string, "%s", line);
+            }
+        }
+
+        pclose(process);
     }
 
-    free(messages);
-    return output.buffer;
+    free(symbols);
+    return string.buffer;
+}
+
+char *stacktrace_to_string(StacktraceHandle handle) {
+    return stacktrace_to_string_pad(handle, NULL);
 }
 
 #endif

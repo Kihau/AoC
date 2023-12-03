@@ -10,7 +10,7 @@ make -j 12
 
 if [ "$1" != "" ]; then
     if [ "$1" != "-" ]; then
-        RUNOPTS=$1
+        RUNOPTS=$@
     fi
 
     ./AoC $RUNOPTS

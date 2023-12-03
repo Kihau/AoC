@@ -14,7 +14,7 @@ typedef struct {
     int dest;
 } Rearrangement;
 
-static Stack stack_create() {
+static Stack stack_create(void) {
     Stack new_stack = {
         .data = {},
         .len = 0,

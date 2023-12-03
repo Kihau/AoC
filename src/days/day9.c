@@ -61,7 +61,7 @@ static void print_state(bool grid[SIZE * 2][SIZE * 2], Rope *rope) {
     printw("\n");
 }
 
-static Rope crate_rope() {
+static Rope crate_rope(void) {
     Rope rope;
     for (int i = 0; i < KNOTS_COUNT; i++) {
         Pos pos = { SIZE, SIZE };

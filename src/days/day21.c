@@ -1,7 +1,5 @@
 #include "all_days.h"
 
-typedef unsigned int u32;
-
 // TODO: Rename Expression to Equation and vice versa
 
 enum OpToken {
@@ -19,6 +17,14 @@ typedef struct {
     u32 base;
     u32 value;
 } Value;
+
+typedef struct {
+    Equation *eq_data;
+    int eq_len;
+
+    Value *val_data;
+    int val_len;
+} Data;
 
 // HASH THIS MORE: This thing is only 4 bytes and is only a-z
 static u32 compress_string(char *string) {
@@ -94,16 +100,6 @@ Equation find_parent(Equation *eq_tokens, int eq_len, u32 token) {
     }
     assert(false);
 }
-
-
-typedef struct {
-    Equation *eq_data;
-    int eq_len;
-
-    Value *val_data;
-    int val_len;
-} Data;
-
 
 long calculate_value(Data *data, u32 token) {
     int eq_idx = find_equation(data->eq_data, data->eq_len, token);

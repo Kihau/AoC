@@ -46,7 +46,7 @@ static void draw_map(Sensor *sensors, int sensors_len) {
     Pos offset = { 10, 10 };
     Pos size = { 30, 30 };
     initscr();
-	noecho();
+    noecho();
     start_color();
 
     for (int i = -offset.y; i < size.y + offset.y; i++) {
@@ -73,7 +73,7 @@ static void draw_map_one_sensor(Sensor *sensors, int sensors_len, int index) {
     Pos size = { 30, 30 };
 
     initscr();
-	noecho();
+    noecho();
 
     for (int i = -offset.y; i < size.y + offset.y; i++) {
         for (int j = -offset.y; j < size.x + offset.x; j++) {
@@ -116,7 +116,7 @@ static void draw_map_with_occupation(Sensor *sensors, int sensors_len) {
     Pos offset = { 10, 10 };
     Pos size = { 30, 30 };
     initscr();
-	noecho();
+    noecho();
     start_color();
 
     for (int i = -offset.y; i < size.y + offset.y; i++) {

@@ -1,7 +1,5 @@
 #include "all_days.h"
 
-typedef unsigned char u8;
-
 typedef struct {
     int x;
     int y;

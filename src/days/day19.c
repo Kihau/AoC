@@ -27,9 +27,6 @@ typedef struct {
     GeodeRobot geo;
 } Blueprint;
 
-typedef unsigned char u8;
-typedef unsigned short u;
-
 typedef struct {
     u8 ore;
     u8 clay;

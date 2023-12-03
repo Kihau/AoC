@@ -304,7 +304,7 @@ static int find_closest_reachable_a(
 
 void init_ncurses() {
     initscr();
-	noecho();
+    noecho();
     start_color();
 
     init_pair(1, COLOR_BLACK, COLOR_RED);

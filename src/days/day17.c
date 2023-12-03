@@ -23,8 +23,6 @@ typedef struct {
     int y;
 } Pos;
 
-typedef unsigned char u8;
-
 static void print_map(u8 map[], int map_len) {
     // Printing in reverse order
     for (int i = map_len - 1; i >= 0; i--) {

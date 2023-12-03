@@ -2,11 +2,11 @@
 
 #if defined(__linux)
 
-void timer_init() {
+void timer_init(void) {
     // Nothing to init here
 }
 
-Timer timer_new() {
+Timer timer_new(void) {
     Timer timer;
     clock_gettime(CLOCK_REALTIME, &timer.time);
     return timer;
@@ -32,11 +32,11 @@ u64 timer_elapsed(const Timer timer) {
 #elif defined(_WIN32)
 
 static LARGE_INTEGER freq;
-void timer_init() {
+void timer_init(void) {
     QueryPerformanceFrequency(&freq); 
 }
 
-Timer timer_new() {
+Timer timer_new(void) {
     Timer timer
     QueryPerformanceCounter(&timer.time); 
     return timer;
@@ -63,11 +63,11 @@ u64 timer_elapsed(const Timer timer) {
 
 #else // Other platforms, lower precision
 
-void timer_init() {
+void timer_init(void) {
     // Nothing to init here
 }
 
-Timer timer_new() {
+Timer timer_new(void) {
     Timer timer;
     timer.time = clock();
     return timer;
