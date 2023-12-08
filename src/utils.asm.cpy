@@ -8,14 +8,10 @@
 BITS 64
 
 section .bss
-    ; NOTE: Won't work in multithreaded context.
-    ;       This is a reminder to change it when I decide run things in parallel.
     string_buffer_inv: resb 32
     string_buffer:     resb 32
     string_len:        resb 2
 
-    ; NOTE: Won't work in multithreaded context.
-    ;       This is a reminder to change it when I decide run things in parallel.
     stat_buffer: resb stat_size
 
 
@@ -26,8 +22,6 @@ section .rodata
     
 
 section .data
-    ; NOTE: Won't work in multithreaded context. Needs to be behind a lock.
-    ;       This is a reminder to change it when I decide run things in parallel.
     heap_ptr: dq 0
 
 
@@ -41,8 +35,8 @@ section .text
 
 ; Compare two strings and see if the first string starts with the seconds string.
 ; Input:
-;     rdi - Pointer to string 1.
-;     rsi - Pointer to string 2.
+;     rax - Pointer to string 1.
+;     rdi - Pointer to string 2.
 ; Output:
 ;     rax - 0 when no match, 1 when match was found.
 string_starts_with:
@@ -50,8 +44,8 @@ string_starts_with:
     ; If we iterated to the end ('\0') of the string 1, that means that there is no match.
     ; If any of the compared characters don't match, that means that there is no match.
 
-    mov r8, rdi
-    mov r9, rsi
+    mov r8, rax
+    mov r9, rdi
 
     ; Iteration counter, used as string character lookup offset.
     mov r10, 0
@@ -64,12 +58,12 @@ string_starts_with:
     je .strings_matching
 
     ; Clear for debugging purposes.
-    mov rdx, 0
-    mov dl, [r8 + r10]
-    cmp dl, 0
+    mov rbx, 0
+    mov bl, [r8 + r10]
+    cmp bl, 0
     je .strings_not_matching
 
-    cmp al, dl
+    cmp al, bl
     jne .strings_not_matching
 
     inc r10
@@ -86,7 +80,7 @@ string_starts_with:
 
 ; Read an entire input file to string buffer.
 ; Input:
-;     rdi - File input path.
+;     rax - File input path.
 ; Output:
 ;     rax - Null terminated input buffer. Set to 0 if the read failed.
 read_to_string:
@@ -94,7 +88,7 @@ read_to_string:
     push r12
     push r13
 
-    mov r12, rdi
+    mov r12, rax
 
     ; Open the input file here.
     mov rax, SYS_OPEN
@@ -111,8 +105,8 @@ read_to_string:
     mov rsi, stat_buffer ; I could put it on the stack
     syscall
 
-    mov rdi, [stat_buffer + stat.st_size]
-    inc rdi ; Add 1 to rax in order to fit string null terminator.
+    mov rax, [stat_buffer + stat.st_size]
+    inc rax ; Add 1 to rax in order to fit string null terminator.
     call bump_allocate
 
     ; Save pointer to the heap.
@@ -143,29 +137,28 @@ read_to_string:
 
 ; Compare two number and return bigger one.
 ; Input:
-;     rdi - First number
-;     rsi - Second number
+;     rax - First number
+;     rdi - Second number
 ; Output:
 ;     rax - Bigger number
 max:
-    cmp rdi, rsi
-    jl .second_larger
-    mov rax, rdi
+    cmp rax, rdi
+    jl .return_rdi
     ret
-.second_larger
-    mov rax, rsi
+.return_rdi
+    mov rax, rdi
     ret
 
 
 
 ; Map virtual memory pages.
 ; Input:
-;     rdi - Minimium number of bytes.
+;     rax - Minimium number of bytes.
 ; Output:
 ;     rax - Pointer to the mapped page.
 map_virtual_page:
     ; Should rcx be aligned to the page size?
-    mov rcx, rdi
+    mov rcx, rax
 
     mov rax, SYS_MMAP  ; syscall code
     mov rdi, 0         ; address, 0 for "random" one
@@ -180,11 +173,11 @@ map_virtual_page:
 
 ; Allocates N number of bytes. Increases heap memory region size.
 ; Input:
-;     rdi - Number of bytes to allocate.
+;     rax - Number of bytes to allocate.
 ; Output:
 ;     rax - Pointer to allocated data.
 bump_allocate:
-    mov rsi, rdi
+    mov rsi, rax
     mov rdx, [heap_ptr]
 
     cmp rdx, 0
@@ -212,9 +205,9 @@ bump_allocate:
 
 ; Reset the allocated data.
 ; Input:
-;     None.
+;     None
 ; Output:
-;     None.
+;     None
 bump_reset:
     mov QWORD [heap_ptr], 0
     ret
@@ -231,7 +224,7 @@ debug_hit_print:
 
 ; Convert input number to a string.
 ; Input:
-;     rdi - The number to convert.
+;     rax - The number to convert.
 ; Output:
 ;     string_buffer - Buffer with converted string.
 ;     string_len    - Length of the converted string.
@@ -239,19 +232,16 @@ number_to_string:
     ; Current buffer write offset
     mov r8, 0
 
-    mov rax, rdi ; Dividend.
-    mov rcx, 10  ; Divisor.
+    ; mov rdx, rax
+    mov rcx, 10
 
 .loop_convert:
-    mov rdx, 0 ; Clear the dividend.
+    mov rdx, 0
     div rcx
-    ; rax - Result of the divion.
-    ; rdx - Divison reminder.
 
     add rdx, 48
     mov [string_buffer_inv + r8], rdx
     inc r8
-
 
     cmp rax, 0
     jne .loop_convert
@@ -282,9 +272,9 @@ number_to_string:
 
 ; Prints 64 bit number into STDOUT.
 ; Input:
-;     rdi - Number to be printed.
+;     rax - Number to be printed.
 ; Output:
-;     None.
+;     none
 print_number:
     call number_to_string
     mov rax, SYS_WRITE
@@ -297,10 +287,11 @@ print_number:
 
 ; Prints newline character into STDOUT.
 ; Input:
-;     None.
+;     none
 ; Output:
-;     None.
+;     none
 print_newline:
+    call number_to_string
     mov rax, SYS_WRITE
     mov rdi, STDOUT
     mov rsi, newline_char

@@ -1,15 +1,15 @@
-;  day1.asm  Advent of Code Day 1 
+;  day1.asm  Advent of Code Day 1
 ;
 ; Assemble: nasm -f elf64 day1.asm
-; Link:     ld -o day1 day1.o
+; Link:     ld -o aoc day1.o ...
 
 %include "defines.inc"
 
 BITS 64
 
-section .data
-    message: db "Hello, day 1!", 10
-    msg_len: equ $-message
+section .rodata
+    header: db "----- DAY 1 -----", 10
+    header_len: equ $-header
 
     solved_part1:     db "Part 1 result: ", 0
     solved_part1_len: equ $-solved_part1
@@ -39,57 +39,12 @@ section .text
 
     extern print_number
     extern print_newline
-
-
-; Compare two strings and see if the first string starts with the seconds string.
-; Input:
-;     rax - pointer to string 1, day1 input buffer
-;     rdi - pointer to string 2, the digit name 
-; Output:
-;     rax - 0 when no match, 1 when match was found.
-substring_match:
-    ; If we iterated to the end ('\0') of the string 2 that means that we found a match.
-    ; If we either reached end of string 1 or we found new line character that means there is no match.
-
-    mov r8, rax
-    mov r9, rdi
-
-    ; Iteration counter, used as string character lookup offset.
-    mov r10, 0
-
-.substring_loop:
-    ; Clear for debugging purposes.
-    mov rax, 0
-    mov al, [r9 + r10]
-    cmp al, 0
-    je .strings_matching
-
-    ; Clear for debugging purposes.
-    mov rbx, 0
-    mov bl, [r8 + r10]
-    cmp bl, 0
-    je .strings_not_matching
-    cmp bl, 10
-    je .strings_not_matching
-
-    cmp al, bl
-    jne .strings_not_matching
-
-    inc r10
-    jmp .substring_loop
-    
-.strings_not_matching:
-    mov rax, 0
-    ret
-
-.strings_matching:
-    mov rax, 1
-    ret
+    extern string_starts_with
 
 
 ; Does what it says.
 ; Input:
-;     rax - Pointer to the input buffer.
+;     rdi - Pointer to the input buffer.
 ; Output:
 ;     rax - Computed value.
 solve_part1:
@@ -116,7 +71,7 @@ solve_part1:
     ; r13 - Pointer to the input string.
 
     ; Pointer to input string
-    mov r13, rax
+    mov r13, rdi
 
     ; Iteration counter
     mov r14, 0
@@ -180,7 +135,7 @@ solve_part1:
 
 ; Does what it says.
 ; Input:
-;     rax - Pointer to the input buffer.
+;     rdi - Pointer to the input buffer.
 ; Output:
 ;     rax - Computed value.
 solve_part2:
@@ -201,7 +156,7 @@ solve_part2:
     ; r13 - Pointer to the input string.
 
     ; Pointer to input string
-    mov r13, rax
+    mov r13, rdi
 
     ; Iteration counter
     mov r14, 0
@@ -250,11 +205,11 @@ solve_part2:
     ; mov r12, [digit_strings_len]
     mov r12, 0
 .loop_digit_string_array:
-    lea rax, [r13 + r14]
-    mov rdi, [digit_strings_array + r12 * 8]
+    lea rdi, [r13 + r14]
+    mov rsi, [digit_strings_array + r12 * 8]
     inc r12
 
-    call substring_match
+    call string_starts_with
     cmp rax, 0
     je .not_a_digit_string
     mov rax, r12
@@ -278,24 +233,26 @@ solve_part2:
     sub rsp, 24
     ret
 
+
 ; Does what it says.
 ; Input:
-;     rax - Pointer to the input buffer.
+;     rdi - Pointer to the input buffer.
 ; Output:
-;     None
+;     None.
 solve_day1:
     mov rbx, rax
     push rbx
 
-    ; Write some dummy welcome message.
+    call print_newline
+
     mov rax, SYS_WRITE
     mov rdi, STDOUT
-    mov rsi, message
-    mov rdx, msg_len
+    mov rsi, header
+    mov rdx, header_len
     syscall
 
     ; PART 1
-    mov rax, rbx
+    mov rdi, rbx
     call solve_part1
     mov rbx, rax
 
@@ -305,14 +262,14 @@ solve_day1:
     mov rdx, solved_part1_len
     syscall
 
-    mov rax, rbx
+    mov rdi, rbx
     call print_number
     call print_newline
 
     pop rbx
 
     ; PART 2
-    mov rax, rbx
+    mov rdi, rbx
     call solve_part2
     mov rbx, rax
 
@@ -322,7 +279,7 @@ solve_day1:
     mov rdx, solved_part2_len
     syscall
 
-    mov rax, rbx
+    mov rdi, rbx
     call print_number
     call print_newline
     ret
