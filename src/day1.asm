@@ -8,14 +8,14 @@
 BITS 64
 
 section .rodata
-    header: db "----- DAY 1 -----", 10
-    header_len: equ $-header
+    header: db "----- DAY 1 -----", 10, 0
+    header_len: equ $ - header
 
     solved_part1:     db "Part 1 result: ", 0
-    solved_part1_len: equ $-solved_part1
+    solved_part1_len: equ $ - solved_part1
 
     solved_part2:     db "Part 2 result: ", 0
-    solved_part2_len: equ $-solved_part2
+    solved_part2_len: equ $ - solved_part2
 
     string_one:   db "one",   0
     string_two:   db "two",   0
@@ -31,7 +31,7 @@ section .rodata
         string_one,   string_two,   string_three,  \
         string_four,  string_five,  string_six,    \
         string_seven, string_eight, string_nine,
-    digit_strings_len: equ $-digit_strings_array
+    digit_strings_len: equ $ - digit_strings_array
 
 
 section .text
@@ -48,18 +48,20 @@ section .text
 ; Output:
 ;     rax - Computed value.
 solve_part1:
+    push rbx
+    push r12
+    push r13
+    push r14
+    push r15
+    push rbp
+
     ; Set up the stack
-    add rsp, 24
+    mov rbp, rsp
+    sub rsp, 2 * 8
 
-    ; push rbx
-    ; push r12
-    ; push r13
-    ; push r14
-    ; push r15
-
-    %define TOTAL_VALUE rsp + 8
-    %define FIRST_DIGIT rsp + 16
-    %define LAST_DIGIT  rsp + 24
+    %define TOTAL_VALUE rsp + 0 * 8
+    %define FIRST_DIGIT rsp + 1 * 8
+    %define LAST_DIGIT  rsp + 2 * 8
     
     ; Clear out the uninitialized data
     mov QWORD [TOTAL_VALUE], 0
@@ -119,16 +121,16 @@ solve_part1:
     inc r14
     jmp .loop_read_input
 .end_of_input:
-    mov rax, QWORD[TOTAL_VALUE]
+    mov rax, QWORD [TOTAL_VALUE]
 
-    ; pop r15
-    ; pop r14
-    ; pop r13
-    ; pop r12
-    ; pop rbx
+    mov rsp, rbp
 
-    ; Set up the stack
-    sub rsp, 24
+    pop rbp
+    pop r15
+    pop r14
+    pop r13
+    pop r12
+    pop rbx
 
     ret
 
@@ -139,12 +141,20 @@ solve_part1:
 ; Output:
 ;     rax - Computed value.
 solve_part2:
-    ; Set up the stack
-    add rsp, 24
+    push rbx
+    push r12
+    push r13
+    push r14
+    push r15
+    push rbp
 
-    %define TOTAL_VALUE rsp + 8
-    %define FIRST_DIGIT rsp + 16
-    %define LAST_DIGIT  rsp + 24
+    ; Set up the stack
+    mov rbp, rsp
+    sub rsp, 16
+
+    %define TOTAL_VALUE rsp + 0
+    %define FIRST_DIGIT rsp + 8
+    %define LAST_DIGIT  rsp + 16
     
     ; Clear out the uninitialized data
     mov QWORD [TOTAL_VALUE], 0
@@ -227,10 +237,17 @@ solve_part2:
     inc r14
     jmp .loop_read_input
 .end_of_input:
-    mov rax, QWORD[TOTAL_VALUE]
+    mov rax, QWORD [TOTAL_VALUE]
 
-    ; Set up the stack
-    sub rsp, 24
+    mov rsp, rbp
+
+    pop rbp
+    pop r15
+    pop r14
+    pop r13
+    pop r12
+    pop rbx
+
     ret
 
 
@@ -240,46 +257,29 @@ solve_part2:
 ; Output:
 ;     None.
 solve_day1:
-    mov rbx, rax
     push rbx
+    push r12
+
+    mov r12, rdi
 
     call print_newline
 
-    mov rax, SYS_WRITE
-    mov rdi, STDOUT
-    mov rsi, header
-    mov rdx, header_len
-    syscall
+    PRINT header, header_len
 
     ; PART 1
-    mov rdi, rbx
+    mov rdi, r12
     call solve_part1
     mov rbx, rax
 
-    mov rax, SYS_WRITE
-    mov rdi, STDOUT
-    mov rsi, solved_part1
-    mov rdx, solved_part1_len
-    syscall
-
-    mov rdi, rbx
-    call print_number
-    call print_newline
-
-    pop rbx
+    PRINTLN_WITH_NUMBER solved_part1, solved_part1_len, rbx
 
     ; PART 2
-    mov rdi, rbx
+    mov rdi, r12
     call solve_part2
     mov rbx, rax
 
-    mov rax, SYS_WRITE
-    mov rdi, STDOUT
-    mov rsi, solved_part2
-    mov rdx, solved_part2_len
-    syscall
+    PRINTLN_WITH_NUMBER solved_part2, solved_part2_len, rbx
 
-    mov rdi, rbx
-    call print_number
-    call print_newline
+    pop r12
+    pop rbx
     ret

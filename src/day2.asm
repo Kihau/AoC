@@ -12,8 +12,8 @@ BITS 64
 %define PART1_MAX_BLUE  14
 
 section .rodata
-    header: db "----- DAY 2 -----", 10
-    header_len: equ $-header
+    header: db "----- DAY 2 -----", 10, 0
+    header_len: equ $ - header
 
     string_red:   db "red",   0
     string_green: db "green", 0
@@ -27,16 +27,7 @@ section .rodata
     result_part2: db "Part 2 result: ", 0
     result2_len:  equ $ - result_part2
 
-
-section .bss
-    computed_value:  resq 1 
-    computed_value2: resq 1 
-
-    max_red:   resq 1 
-    max_green: resq 1 
-    max_blue:  resq 1 
-
-    game_invalid:  resq 1 
+    ; TODO: Parsing error messages
 
 
 section .text
@@ -55,14 +46,31 @@ section .text
 ;     rax - Computed result for part 1.
 ;     rdx - Computed result for part 2.
 solve_both_parts:
+    push r15
+    push r14
+    push r13
+    push r12
+    push rbx
+    push rbp
+
+    mov rbp, rsp
+    sub rsp, 5 * 8
+
+    %define computed_value  rsp + 0 * 8
+    %define computed_value2 rsp + 1 * 8
+    %define max_red         rsp + 2 * 8
+    %define max_green       rsp + 3 * 8
+    %define max_blue        rsp + 4 * 8
+    %define game_invalid    rsp + 5 * 8
+
     ; Input buffer
     mov r15, rdi
 
     ; String iteration index
-    mov r14, 0
+    xor r14, r14
 
     ; Game / Line counter
-    mov r13, 0
+    xor r13, r13
 
     ; Previous string iteration index
     ; (Only used to point out where exactly the parsing error occurred)
@@ -154,7 +162,6 @@ solve_both_parts:
     je .end_of_input
     cmp al, ' '
     je .skip_spaces2
-
 
     ; Go one step back
     dec r14
@@ -260,10 +267,10 @@ solve_both_parts:
 
     mov rax, [computed_value]
     mov rdx, [computed_value2]
-    ret
+    jmp .return_result
 
-.finish_current_game
-    mov rbx, [max_red]
+.finish_current_game:
+    mov rbx,  [max_red]
     imul rbx, [max_green]
     imul rbx, [max_blue]
 
@@ -288,6 +295,16 @@ solve_both_parts:
 
     xor rax, rax
     xor rdx, rdx
+
+.return_result:
+    mov rsp, rbp
+
+    pop rbp
+    pop rbx
+    pop r12
+    pop r13
+    pop r14
+    pop r15
     ret
 
 
@@ -297,15 +314,12 @@ solve_both_parts:
 ; Output:
 ;     None.
 solve_day2:
+    push rbx
     mov rbx, rdi
 
     call print_newline
 
-    mov rax, SYS_WRITE
-    mov rdi, STDOUT
-    mov rsi, header
-    mov rdx, header_len
-    syscall
+    PRINT header, header_len
 
     mov rdi, rbx
     call solve_both_parts
@@ -313,24 +327,8 @@ solve_day2:
     mov r12, rax
     mov r13, rdx
 
-    mov rax, SYS_WRITE
-    mov rdi, STDOUT
-    mov rsi, result_part1
-    mov rdx, result1_len
-    syscall
-
-    mov rdi, r12
-    call print_number
-    call print_newline
-
-    mov rax, SYS_WRITE
-    mov rdi, STDOUT
-    mov rsi, result_part2
-    mov rdx, result2_len
-    syscall
-
-    mov rdi, r13
-    call print_number
-    call print_newline
+    PRINTLN_WITH_NUMBER result_part1, result1_len, r12
+    PRINTLN_WITH_NUMBER result_part2, result2_len, r13
     
+    pop rbx
     ret
