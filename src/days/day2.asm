@@ -3,9 +3,10 @@
 ; Assemble: nasm -f elf64 day2.asm
 ; Link:     ld -o aoc day2.o ...
 
-%include "defines.inc"
+%include "utils.inc"
 
-BITS 64
+bits 64
+default rel
 
 %define PART1_MAX_RED   12
 %define PART1_MAX_GREEN 13
@@ -33,6 +34,8 @@ section .rodata
 section .text
     global solve_day2
 
+    extern print_output
+    extern print_error
     extern print_number
     extern print_newline
     extern string_starts_with
@@ -286,11 +289,9 @@ solve_both_parts:
     jmp .parse_next_game
 
 .something_went_wrong:
-    mov rax, SYS_WRITE
-    mov rdi, STDERR
-    mov rsi, parsing_failed
-    mov rdx, parsing_failed_len
-    syscall
+    mov rdi, parsing_failed
+    mov rsi, parsing_failed_len
+    call print_error
     call print_newline
 
     xor rax, rax
@@ -319,7 +320,9 @@ solve_day2:
 
     call print_newline
 
-    PRINT header, header_len
+    mov rdi, header
+    mov rsi, header_len
+    call print_output
 
     mov rdi, rbx
     call solve_both_parts
@@ -327,8 +330,19 @@ solve_day2:
     mov r12, rax
     mov r13, rdx
 
-    PRINTLN_WITH_NUMBER result_part1, result1_len, r12
-    PRINTLN_WITH_NUMBER result_part2, result2_len, r13
+    mov rdi, result_part1 
+    mov rsi, result1_len
+    call print_output
+    mov rdi, r12
+    call print_number
+    call print_newline
+
+    mov rdi, result_part2 
+    mov rsi, result2_len
+    call print_output
+    mov rdi, r13
+    call print_number
+    call print_newline
     
     pop rbx
     ret

@@ -3,9 +3,10 @@
 ; Assemble: nasm -f elf64 day3.asm
 ; Link:     ld -o aoc day3.o ...
 
-%include "defines.inc"
+%include "utils.inc"
 
-BITS 64
+bits 64
+default rel
 
 section .rodata
     header: db "----- DAY 3 -----", 10, 0
@@ -31,6 +32,7 @@ section .bss
 section .text
     global solve_day3
 
+    extern print_output
     extern print_number
     extern print_newline
 
@@ -585,9 +587,6 @@ solve_day3:
     mov [board], rdi
     mov [board_size], rsi
 
-    call print_newline
-    PRINT header, header_len
-
     mov rdi, [board]
     call find_board_width
     mov [board_width], rax
@@ -685,11 +684,25 @@ solve_day3:
     ; call print_number
     ; call print_newline
 
+    call print_newline
+    mov rdi, header
+    mov rsi, header_len
+    call print_output
 
-    PRINTLN_WITH_NUMBER solved_part1, solved_part1_len, r12
+    mov rdi, solved_part1
+    mov rsi, solved_part1_len
+    call print_output
+    mov rdi, r12
+    call print_number
+    call print_newline
 
     pop r8
-    PRINTLN_WITH_NUMBER solved_part2, solved_part2_len, r8
+    mov rdi, solved_part2 
+    mov rsi, solved_part2_len
+    call print_output
+    mov rdi, r8
+    call print_number
+    call print_newline
 
     pop r12
     pop r13

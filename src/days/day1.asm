@@ -3,9 +3,10 @@
 ; Assemble: nasm -f elf64 day1.asm
 ; Link:     ld -o aoc day1.o ...
 
-%include "defines.inc"
+%include "utils.inc"
 
-BITS 64
+bits 64
+default rel
 
 section .rodata
     header: db "----- DAY 1 -----", 10, 0
@@ -37,6 +38,7 @@ section .rodata
 section .text
     global solve_day1
 
+    extern print_output
     extern print_number
     extern print_newline
     extern string_starts_with
@@ -216,7 +218,8 @@ solve_part2:
     mov r12, 0
 .loop_digit_string_array:
     lea rdi, [r13 + r14]
-    mov rsi, [digit_strings_array + r12 * 8]
+    mov rsi, digit_strings_array
+    mov rsi, [rsi + r12 * 8]
     inc r12
 
     call string_starts_with
@@ -263,22 +266,33 @@ solve_day1:
     mov r12, rdi
 
     call print_newline
-
-    PRINT header, header_len
+    mov rdi, header
+    mov rsi, header_len
+    call print_output
 
     ; PART 1
     mov rdi, r12
     call solve_part1
     mov rbx, rax
 
-    PRINTLN_WITH_NUMBER solved_part1, solved_part1_len, rbx
+    mov rdi, solved_part1 
+    mov rsi, solved_part1_len
+    call print_output
+    mov rdi, rbx
+    call print_number
+    call print_newline
 
     ; PART 2
     mov rdi, r12
     call solve_part2
     mov rbx, rax
 
-    PRINTLN_WITH_NUMBER solved_part2, solved_part2_len, rbx
+    mov rdi, solved_part2 
+    mov rsi, solved_part2_len
+    call print_output
+    mov rdi, rbx
+    call print_number
+    call print_newline
 
     pop r12
     pop rbx

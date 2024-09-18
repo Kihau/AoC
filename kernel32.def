@@ -1,0 +1,6 @@
+library kernel32
+
+exports
+     ExitProcess@4
+     WriteConsoleA@20
+     GetStdHandle@4

@@ -73,13 +73,18 @@ void looping_test() {
 void mmap_testing(void) {
     while (true) {
         char *ptr = mmap(0, 33L * GIGA, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
-        ptr[1] = 0;
-        ptr[2] = 0;
-        ptr[3] = 0;
-        // printf("%p\n", ptr);
-        // printf("%p\n", &ptr);
-        // printf("%p\n", "hi");
-        // *ptr = 0;
+        // for (long i = 0; i < 1024 * 1024; i++) {
+        //     ptr[i * 5000] = 0;
+        //     // ptr[i * 4096] = 0;
+        //     // ptr[i * 2048] = 0;
+        // }
+
+        for (long i = 0; i < 4100; i++) {
+            ptr[i] = 0;
+            // ptr[i * 4096] = 0;
+            // ptr[i * 2048] = 0;
+        }
+
         getchar();
     }
 }
