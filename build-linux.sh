@@ -14,16 +14,9 @@ nasm -f elf64 src/days/day4.asm -i src/ -o build/day4.o
 
 nasm -f elf64 src/os/linux.asm -i src/ -o build/linux.o
 
-objects="build/main.o 
-         build/scratch.o 
-         build/utils.o 
-         build/day1.o 
-         build/day2.o 
-         build/day3.o 
-         build/day4.o
-         build/linux.o"
+objects=$(find build/ -type f -name "*.o")
 
-ld -e main $objects -o build/aoc
+ld --entry=main $objects --output=build/aoc
 ./build/aoc
 # strace ./aoc
 

@@ -3,6 +3,7 @@
 %include "os/linux.inc"
 
 bits 64
+default rel
 
 section .text
     global exit_program

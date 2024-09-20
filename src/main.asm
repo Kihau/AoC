@@ -28,15 +28,17 @@ section .text
     extern print_output
     extern exit_program
 
+    extern scratch_run
+
 
 main:
     push rbp
     mov rbp, rsp
 
-    ; call scratch_run
-
     sub rsp, Arena_size
     mov r15, rsp
+
+    ;call scratch_run
 
     mov rdi, r15
     call arena_create

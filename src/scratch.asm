@@ -6,51 +6,30 @@ section .rodata
     result: db 10, "Result is: ", 0
     result_len: equ $ - result
 
-BITS 64
+    my_dummy_file: db "./dummyfile.txt", 0
+
+bits 64
+default rel
 
 section .text
     global scratch_run
 
-    extern number_to_string
+    extern open_file
     extern print_number
     extern print_newline
+    extern exit_program
 
 scratch_run:
     push rbp
     mov rbp, rsp
-    ; sub rsp, number_string_size
 
-    ; PRINT result, result_len
-
-    ; mov rdi, 10
-    ; mov rsi, rsp
-    ; call number_to_string
-    ; lea r8, [rsp + number_string.buffer]
-    ; mov r9b, [rsp + number_string.len]
-    ; PRINTLN r8, r9
-
-    call print_newline
-    mov rdi, 2
+    mov rdi, my_dummy_file
+    call open_file
+    mov rdi, rax
     call print_number
     call print_newline
-    mov rdi, 3
-    call print_number
-    call print_newline
-    mov rdi, 4
-    call print_number
-    call print_newline
-    mov rdi, 58
-    call print_number
-    call print_newline
-    mov rdi, 123
-    call print_number
-    call print_newline
-    mov rdi, 4567
-    call print_number
-    call print_newline
-
-.trap:
-    jmp .trap
+    mov rdi, 0
+    call exit_program
 
     mov rsp, rbp
     pop rbp

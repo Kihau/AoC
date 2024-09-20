@@ -36,7 +36,7 @@ exit_program:
     push rbp
     mov rbp, rsp
     sub rsp, 32
-    mov rcx, rdi
+    mov rcx, rdi ; [in] UINT uExitCode
     call ExitProcess
     mov rsp, rbp
     pop rbp
@@ -53,12 +53,13 @@ print_output:
     push rbp
     mov rbp, rsp
     sub rsp, 32 + 8 + 8
-    mov rcx, STD_OUTPUT_HANDLE
+    mov rcx, STD_OUTPUT_HANDLE ; [in] DWORD nStdHandle
     call GetStdHandle
-    mov rcx, rax
-    mov rdx, rdi
-    mov r8, rsi
-    mov r9, 0
+    mov rcx, rax            ; [in]             HANDLE  hConsoleOutput,
+    mov rdx, rdi            ; [in]       const VOID    *lpBuffer,
+    mov r8, rsi             ; [in]             DWORD   nNumberOfCharsToWrite,
+    mov r9, 0               ; [out, optional]  LPDWORD lpNumberOfCharsWritten,
+    mov QWORD [rsp + 32], 0 ; [reserved]       LPVOID  lpReserved
     call WriteConsoleA
     mov rsp, rbp
     pop rbp
@@ -75,13 +76,13 @@ print_error:
     push rbp
     mov rbp, rsp
     sub rsp, 32 + 8 + 8
-    mov rcx, STD_ERROR_HANDLE
+    mov rcx, STD_ERROR_HANDLE ; [in] DWORD nStdHandle
     call GetStdHandle
-    mov rcx, rax
-    mov rdx, rdi
-    mov r8, rsi
-    mov r9, 0
-    mov QWORD [rsp + 32], 0
+    mov rcx, rax            ; [in]             HANDLE  hConsoleOutput,
+    mov rdx, rdi            ; [in]       const VOID    *lpBuffer,
+    mov r8, rsi             ; [in]             DWORD   nNumberOfCharsToWrite,
+    mov r9, 0               ; [out, optional]  LPDWORD lpNumberOfCharsWritten,
+    mov QWORD [rsp + 32], 0 ; [reserved]       LPVOID  lpReserved
     call WriteConsoleA
     mov rsp, rbp
     pop rbp
@@ -97,10 +98,10 @@ map_memory_pages:
     push rbp
     mov rbp, rsp
     sub rsp, 32
-    mov rcx, 0
-    mov rdx, rdi
-    mov r8, MEM_RESERVE | MEM_COMMIT
-    mov r9, PAGE_READWRITE
+    mov rcx, 0                       ; [in, optional] LPVOID lpAddress,
+    mov rdx, rdi                     ; [in]           SIZE_T dwSize,
+    mov r8, MEM_RESERVE | MEM_COMMIT ; [in]           DWORD  flAllocationType,
+    mov r9, PAGE_READWRITE           ; [in]           DWORD  flProtect
     call VirtualAlloc
     mov rsp, rbp
     pop rbp
@@ -117,9 +118,9 @@ unmap_memory_pages:
     push rbp
     mov rbp, rsp
     sub rsp, 32
-    mov rcx, rdi
-    mov rdx, rsi
-    mov r8, MEM_RELEASE
+    mov rcx, rdi        ; [in] LPVOID lpAddress,
+    mov rdx, rsi        ; [in] SIZE_T dwSize,
+    mov r8, MEM_RELEASE ; [in] DWORD  dwFreeType
     call VirtualFree
     mov rsp, rbp
     pop rbp
@@ -130,20 +131,19 @@ unmap_memory_pages:
 ; Input:
 ;     rdi - Path to a file.
 ; Output:
-;     rax - File handle.
+;     rax - File handle. Returns -1 on error.
 open_file:
     push rbp
     mov rbp, rsp
     sub rsp, 32 + 24 + 8
-    mov rcx, rdi                                    ;  [in]           LPCSTR                lpFileName,
-    mov rdx, GENERIC_READ | GENERIC_WRITE           ;  [in]           DWORD                 dwDesiredAccess,
-    mov r8, FILE_SHARE_NONE                         ;  [in]           DWORD                 dwShareMode,
-    mov r9, 0                                       ;  [in, optional] LPSECURITY_ATTRIBUTES lpSecurityAttributes,
-    mov QWORD [rsp + 32], OPEN_EXISTING             ;  [in]           DWORD                 dwCreationDisposition,
-    mov QWORD [rsp + 32 + 8], FILE_ATTRIBUTE_NORMAL ;  [in]           DWORD                 dwFlagsAndAttributes,
-    mov QWORD [rsp + 32 + 16], 0                    ;  [in, optional] HANDLE                hTemplateFile
+    mov rcx, rdi                                    ; [in]           LPCSTR                lpFileName,
+    mov rdx, GENERIC_READ | GENERIC_WRITE           ; [in]           DWORD                 dwDesiredAccess,
+    mov r8, FILE_SHARE_NONE                         ; [in]           DWORD                 dwShareMode,
+    mov r9, 0                                       ; [in, optional] LPSECURITY_ATTRIBUTES lpSecurityAttributes,
+    mov QWORD [rsp + 32], OPEN_EXISTING             ; [in]           DWORD                 dwCreationDisposition,
+    mov QWORD [rsp + 32 + 8], FILE_ATTRIBUTE_NORMAL ; [in]           DWORD                 dwFlagsAndAttributes,
+    mov QWORD [rsp + 32 + 16], 0                    ; [in, optional] HANDLE                hTemplateFile
     call CreateFileA
-    ; TODO: Error handling
     mov rsp, rbp
     pop rbp
     ret
@@ -173,7 +173,7 @@ close_file:
 get_file_size:
     push rbp
     mov rbp, rsp
-    sub rsp, 32 + 8
+    sub rsp, 8 + 32
     mov rcx, rdi        ; [in]  HANDLE         hFile,
     lea rdx, [rsp + 32] ; [out] PLARGE_INTEGER lpFileSize
     call GetFileSizeEx

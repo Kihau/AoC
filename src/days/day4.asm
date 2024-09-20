@@ -5,7 +5,8 @@
 
 %include "utils.inc"
 
-BITS 64
+bits 64
+default rel
 
 section .rodata
     header: db "----- DAY 4 -----", 10, 0

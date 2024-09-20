@@ -30,10 +30,12 @@ section .text
     extern unmap_memory_pages
 
 
-;rdi - arena
-;rsi - path
-;rax - output buffer
-;rdx - bytes read
+; Read an entire file to a memory.
+; Input:
+;     rdi - Pointer to the arena allocator.
+;     rsi - Path to a file.
+; Output:
+;     rax - Output buffer.
 read_entire_file:
     push r15 ; Stores arena.
     push r14 ; Stores file handle.

@@ -696,10 +696,10 @@ solve_day3:
     call print_number
     call print_newline
 
-    pop r8
     mov rdi, solved_part2 
     mov rsi, solved_part2_len
     call print_output
+    pop r8
     mov rdi, r8
     call print_number
     call print_newline

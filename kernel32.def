@@ -1,6 +1,12 @@
-library kernel32
+LIBRARY kernel32.dll
 
-exports
-     ExitProcess@4
-     WriteConsoleA@20
-     GetStdHandle@4
+EXPORTS
+    ExitProcess
+    GetStdHandle
+    WriteConsoleA
+    VirtualAlloc
+    VirtualFree
+    CreateFileA
+    CloseHandle
+    GetFileSizeEx
+    ReadFile
