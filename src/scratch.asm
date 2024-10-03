@@ -23,12 +23,12 @@ scratch_run:
     push rbp
     mov rbp, rsp
 
-    mov rdi, my_dummy_file
+    mov rax, my_dummy_file
     call open_file
-    mov rdi, rax
+    mov rax, rdi
     call print_number
     call print_newline
-    mov rdi, 0
+    mov rax, 0
     call exit_program
 
     mov rsp, rbp

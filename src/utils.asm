@@ -30,44 +30,54 @@ section .text
     extern unmap_memory_pages
 
 
+; WORK IN PROGRESS
+; Copy two non overlapping buffer to another buffer
+memory_copy:
+    ud2
+
+; rax, rbx, rcx, rdx, rsi, rdi
+
 ; Read an entire file to a memory.
-; Input:
-;     rdi - Pointer to the arena allocator.
-;     rsi - Path to a file.
-; Output:
-;     rax - Output buffer.
+; Parameters:
+;     [in] u8* - Pointer to the arena allocator.
+;     [in] u8* - Path to a file.
+; Returns:
+;     [out] u8* - Output buffer.
+;     [out] u64 - Size of the buffer.
 read_entire_file:
     push r15 ; Stores arena.
     push r14 ; Stores file handle.
     push r13 ; File size.
 
-    mov r15, rdi
+    mov r15, rax
 
-    mov rdi, rsi
+    mov rax, rbx
     call open_file
-    mov r14, rax
+    ; TODO: Check if succeeded
+    mov r14, rdi
 
-    mov rdi, r14
+    mov rax, r14
     call get_file_size
-    mov r13, rax
+    mov r13, rdi
+
+    mov rax, r15
+    mov rbx, r13
+    call arena_allocate
+
+    mov rax, r14
+    mov rbx, rdi
+    mov rcx, r13
+    call read_file
+    ; TODO: Check wheter entire files was read to the buffer.
+
+    ; Arena won't be needed now - swap it with a pointer to the buffer
+    mov r15, rbx
+
+    mov rax, r14
+    call close_file
 
     mov rdi, r15
     mov rsi, r13
-    call arena_allocate
-
-    mov rdi, r14
-    mov rsi, rax
-    mov rdx, r13
-    call read_file
-
-    ; Arena won't be needed now - swap it with the pointer to the buffer
-    mov r15, rsi
-
-    mov rdi, r14
-    call close_file
-
-    mov rax, r15
-    mov rdx, r13
 
     pop r13
     pop r14
@@ -75,188 +85,205 @@ read_entire_file:
     ret
 
 ; Compare two strings and see if the first string starts with the seconds string.
-; Input:
-;     rdi - Pointer to string 1.
-;     rsi - Pointer to string 2.
-; Output:
-;     rax - 0 when no match, 1 when match was found.
+; Parameters:
+;     [in] u8* - Pointer to string 1.
+;     [in] u8* - Pointer to string 2.
+; Returns:
+;     [out] u64 - 0 when no match, 1 when match was found.
 string_starts_with:
+    push r15
+    push r14
+    push r13
     ; If we iterated to the end ('\0') of the string 2, that means that we found a match.
     ; If we iterated to the end ('\0') of the string 1, that means that there is no match.
     ; If any of the compared characters don't match, that means that there is no match.
 
-    mov r8, rdi
-    mov r9, rsi
+    mov r13, rax ; Pointer to string 1.
+    mov r14, rbx ; Pointer to string 2.
 
     ; Iteration counter, used as string character lookup offset.
-    mov r10, 0
+    mov r15, 0
 
 .substring_loop:
     ; Clear for debugging purposes.
     mov rax, 0
-    mov al, [r9 + r10]
+    mov al, [r14 + r15]
     cmp al, 0
     je .strings_matching
 
     ; Clear for debugging purposes.
     mov rdx, 0
-    mov dl, [r8 + r10]
+    mov dl, [r13 + r15]
     cmp dl, 0
     je .strings_not_matching
 
     cmp al, dl
     jne .strings_not_matching
 
-    inc r10
+    inc r15
     jmp .substring_loop
     
 .strings_not_matching:
-    mov rax, 0
+    mov rdi, 0
+    pop r13
+    pop r14
+    pop r15
     ret
 
 .strings_matching:
-    mov rax, 1
+    mov rdi, 1
+    pop r13
+    pop r14
+    pop r15
     ret
 
 
 ; Compare two number and return bigger one.
-; Input:
-;     rdi - First number.
-;     rsi - Second number.
-; Output:
-;     rax - Bigger number.
+; Parameters:
+;     [in] u64 - First number.
+;     [in] u64 - Second number.
+; Returns:
+;     [out] u64 - Bigger number.
 max:
-    cmp rdi, rsi
+    cmp rax, rbx
     jl .second_larger
-    mov rax, rdi
+    mov rdi, rax
     ret
 .second_larger:
-    mov rax, rsi
+    mov rdi, rbx
     ret
 
 
 ; Create new arena allocator.
-; Input:
-;     rdi - Pointer to uninitialized Arena struct.
-; Output:
-;     rax - Initialized arena allocator.
+; Parameters:
+;     [out] Arena* - Pointer to an empty buffer where Arena struct will be placed.
+; Returns:
+;     None.
 arena_create:
-    push r12
+    push r15
+    mov r15, rax ; Preserve
 
     %define ARENA_SIZE 2 * 1024 * 1024 * 1024
-    mov rcx, ARENA_SIZE
-
-    mov r12, rdi
-    mov QWORD [r12 + Arena.total_size], rcx
-    mov QWORD [r12 + Arena.position],   0
-
-    mov rdi, ARENA_SIZE
+    mov rax, ARENA_SIZE
+    mov QWORD [r15 + Arena.total_size], rax
+    mov QWORD [r15 + Arena.position],   0
     call map_memory_pages
-    mov [r12 + Arena.base_ptr], rax
+    mov [r15 + Arena.base_ptr], rdi
 
-    mov rax, r12
-    pop r12
+    pop r15
     ret
 
 
 ; Destroy an arena allocator. Unmap all virtual memory pages.
-; Input:
-;     rdi - Pointer to arena allocator.
-; Output:
+; Parameters:
+;     [in, out] Arena* - Pointer to arena allocator.
+; Returns:
 ;     None.
 arena_destroy:
-    push r12
-    mov r12, rdi
+    push r15
+    mov r15, rax
 
-    mov rdi, [r12 + Arena.base_ptr]
-    mov rsi, [r12 + Arena.total_size]
+    mov rax, [r15 + Arena.base_ptr]
+    mov rbx, [r15 + Arena.total_size]
     call unmap_memory_pages
 
-    mov QWORD [r12 + Arena.base_ptr], 0
-    mov QWORD [r12 + Arena.total_size], 0
-    mov QWORD [r12 + Arena.position], 0
+    mov QWORD [r15 + Arena.base_ptr],   0
+    mov QWORD [r15 + Arena.total_size], 0
+    mov QWORD [r15 + Arena.position],   0
 
-    pop r12
+    pop r15
     ret
 
 
 ; Reset the arena. Unmapping all allocated pages and map new ones.
-; Input:
-;     rdi - Pointer to an arena allocator.
-; Output:
+; Parameters:
+;     [in, out] Arena* - Pointer to an arena allocator.
+; Returns:
 ;     None.
 arena_reset:
-    push rbx
-    mov rbx, rdi ; Preserve
+    push r15
+    mov r15, rax ; Preserve
     call arena_destroy
-    mov rdi, rbx
+    mov rax, r15
     call arena_create
-    pop rbx
+    pop r15
     ret
 
 
 ; Allocate rdi number of bytes.
-; Input:
-;     rdi - Pointer to an arena allocator.
-;     rsi - Size in bytes to allocate.
-; Output:
-;     rax - Pointer to allocated data. Set to 0 if the allocation failed.
+; Parameters:
+;     [in, out] Arena* - Pointer to an arena allocator.
+;     [in]      u64    - Size in bytes to allocate.
+; Returns:
+;     [out] - Pointer to allocated data. Set to 0 if the allocation failed.
 arena_allocate:
-    mov r9,  [rdi + Arena.position]
-    mov r10, [rdi + Arena.base_ptr]
-    add r10, r9
-    add r9, rsi
-    cmp r9, [rdi + Arena.total_size]
+    push r15
+    push r14
+    mov r14, [rax + Arena.position]
+    mov r15, [rax + Arena.base_ptr]
+    add r15, r14
+    add r14, rbx
+    cmp r14, [rax + Arena.total_size]
     jl .not_out_of_bounds
-    xor rax, rax
-    ret
+    xor rdi, rdi
+    jmp .arena_allocate_exit
 
 .not_out_of_bounds:
-    mov [rdi + Arena.position], r9
-    mov rax, r10
+    mov [rax + Arena.position], r14
+    mov rdi, r15
+
+.arena_allocate_exit:
+    pop r14
+    pop r15
     ret
 
 
 ; Clear the arena without unmapping any allocated memory.
-; Input:
-;     rdi - Pointer to an arena allocator.
-; Output:
+; Parameters:
+;     [in, out] Arena* - Pointer to an arena allocator.
+; Returns:
 ;     None.
 arena_clear:
-    mov QWORD [rdi + Arena.position], 0
+    mov QWORD [rax + Arena.position], 0
     ret
 
 
 ; Convert input string to a number.
-; Input:
-;     rdi - Input string.
-;     rsi - Size of the string.
-; Output:
-;     rax - Converted number.
+; Parameters:
+;     [in] u8* - Input string.
+;     [in] u64 - Size of the string.
+; Returns:
+;     [out] u64 - Converted number.
 string_to_number:
     ret
 
 
 ; Convert zero-terminated input string to a number.
-; Input:
-;     rdi - Zero-terminated input string.
-; Output:
-;     rax - Converted number.
+; Parameters:
+;     [in] u8* - Zero-terminated input string.
+; Returns:
+;     [out] u64 - Converted number.
 cstring_to_number:
     ret
 
 
 ; Convert input number to a string.
-; Input:
-;     rdi - The number to convert.
-;     rsi - Pointer to Number_String struct. The output will be placed here.
-; Output:
-;     rsi - Parsed number into Number_String struct.
+; Parameters:
+;     [in] u64             - The number to convert.
+;     [out] Number_String* - Pointer to Number_String struct. The output will be placed here.
+; Returns:
+;     None.
 number_to_string:
-    ; Current buffer write offset
-    xor r9, r9
+    push r15
+    push r14
+    push r13
 
-    mov rax, rdi ; Dividend.
+    mov r15, rax
+
+    ; Current buffer write offset
+    xor r14, r14
+
+    mov rax, r15 ; Dividend.
     mov rcx, 10  ; Divisor.
 
 .loop_number_convert:
@@ -267,63 +294,70 @@ number_to_string:
     ; rdx - Divison reminder.
 
     add rdx, '0'
-    mov [rsi + Number_String.buffer + r9], dl
-    inc r9
+    mov [rbx + Number_String.buffer + r14], dl
+    inc r14
 
     cmp rax, 0
     jne .loop_number_convert
 
     ; Set string length and add null terminator.
-    lea rax, [r9]
-    mov [rsi + Number_String.len], al
-    mov BYTE [rsi + Number_String.buffer + rax], 0
+    lea rax, [r14]
+    mov [rbx + Number_String.len], al
+    mov BYTE [rbx + Number_String.buffer + rax], 0
 
     ; Clear the left iterator.
-    xor r8, r8
-    dec r9
+    xor r13, r13
+    dec r14
 .loop_string_inverse:
-    mov al, [rsi + Number_String.buffer + r8]
-    mov dl, [rsi + Number_String.buffer + r9]
-    mov [rsi + Number_String.buffer + r8], dl
-    mov [rsi + Number_String.buffer + r9], al
+    mov al, [rbx + Number_String.buffer + r13]
+    mov dl, [rbx + Number_String.buffer + r14]
+    mov [rbx + Number_String.buffer + r13], dl
+    mov [rbx + Number_String.buffer + r14], al
 
-    inc r8
-    dec r9
+    inc r13
+    dec r14
     
-    cmp r8, r9
+    cmp r13, r14
     jl .loop_string_inverse
+    pop r13
+    pop r14
+    pop r15
     ret
 
 
 ; Prints 64 bit number into STDOUT.
-; Input:
-;     rdi - Number to be printed.
-; Output:
+; Parameters:
+;     [in] u64 - Number to be printed.
+; Returns:
 ;     None.
 print_number:
+    push r15
+    push r14
     sub rsp, Number_String_size
 
-    mov rsi, rsp
+    mov rbx, rsp
     call number_to_string
-    lea r8,  [rsi + Number_String.buffer]
-    xor r9, r9
-    mov r9b, [rsi + Number_String.len]
+    lea r14, [rbx + Number_String.buffer]
+    xor r15, r15
+    mov r15b, [rbx + Number_String.len]
 
-    mov rdi, r8
-    mov rsi, r9
+    mov rax, r14
+    mov rbx, r15
     call print_output
 
     add rsp, Number_String_size
+    pop r14
+    pop r15
     ret
 
 
 ; Prints newline character into STDOUT.
-; Input:
+; Parameters:
 ;     None.
-; Output:
+; Returns:
 ;     None.
 print_newline:
-    mov rdi, newline_char
-    mov rsi, 1
+    mov rax, newline_char
+    mov rbx, 1
     call print_output
     ret

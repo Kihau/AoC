@@ -26,16 +26,10 @@ libkernel32="res/kernel32.lib"
 # libkernel32="Program Files (x86)\Windows Kits\10\Lib\10.0.22621.0\um\x64\kernel32.Lib"
 
 # Cross building from linux using MINGW linker:
-# x86_64-w64-mingw32-ld --entry=main $objects $libkernel32 --output=build/aoc.exe
+x86_64-w64-mingw32-ld --entry=main $objects $libkernel32 --output=build/aoc.exe
 
-# Building by using MSVC linker.
-link $objects $libkernel32 /entry:main /out:build/aoc.exe 
-
-# Building using clang + GNU toolchain.
-# clang -target x86_64-pc-win32-gnu $objects -o build/aoc.exe
-
-# Building using clang + MSVC toolchain.
-# clang -target x86_64-pc-win32-msvc $objects -o build/aoc.exe
+# Building by using GNU linker.
+# ld --entry=main $objects $libkernel32 --output=build/aoc.exe
 
 # wine ./build/aoc.exe
 # ./build/aoc.exe

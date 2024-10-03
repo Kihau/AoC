@@ -44,22 +44,23 @@ section .text
     extern string_starts_with
 
 
-; Does what it says.
-; Input:
-;     rdi - Pointer to the input buffer.
-; Output:
-;     rax - Computed value.
+; Solves AoC day 1 part 1.
+; Parameters:
+;     [in] u8* - Pointer to the input buffer.
+;     [in] u64 - Input buffer size.
+; Results:
+;     [out] u64 - Part 1 solution.
 solve_part1:
-    push rbx
-    push r12
-    push r13
-    push r14
-    push r15
     push rbp
+    push r15
+    push r14
+    push r13
+    push r12
+    push r11
 
     ; Set up the stack
     mov rbp, rsp
-    sub rsp, 2 * 8
+    sub rsp, 3 * 8
 
     %define TOTAL_VALUE rsp + 0 * 8
     %define FIRST_DIGIT rsp + 1 * 8
@@ -75,7 +76,7 @@ solve_part1:
     ; r13 - Pointer to the input string.
 
     ; Pointer to input string
-    mov r13, rdi
+    mov r13, rax
 
     ; Iteration counter
     mov r14, 0
@@ -93,13 +94,13 @@ solve_part1:
     jne .not_newline
 
     ; Compute the value for the current line
-    mov rbx, [FIRST_DIGIT]
+    mov r11, [FIRST_DIGIT]
     mov rdi, [LAST_DIGIT]
-    imul rbx, 10
-    add rbx, rdi
+    imul r11, 10
+    add r11, rdi
 
     ; Add computed value to total value and clear the digits
-    add [TOTAL_VALUE], rbx
+    add [TOTAL_VALUE], r11
     mov QWORD [FIRST_DIGIT], 0
     mov QWORD [LAST_DIGIT], 0
 .not_newline:
@@ -113,8 +114,8 @@ solve_part1:
     sub rax, 48
     mov [LAST_DIGIT], rax
 
-    mov rbx, [FIRST_DIGIT]
-    cmp rbx, 0
+    mov r11, [FIRST_DIGIT]
+    cmp r11, 0
     jne .first_number_found
     mov [FIRST_DIGIT], rax
 .first_number_found:
@@ -123,40 +124,40 @@ solve_part1:
     inc r14
     jmp .loop_read_input
 .end_of_input:
-    mov rax, QWORD [TOTAL_VALUE]
+    mov rdi, QWORD [TOTAL_VALUE]
 
     mov rsp, rbp
 
-    pop rbp
-    pop r15
-    pop r14
-    pop r13
+    pop r11
     pop r12
-    pop rbx
-
+    pop r13
+    pop r14
+    pop r15
+    pop rbp
     ret
 
 
-; Does what it says.
-; Input:
-;     rdi - Pointer to the input buffer.
-; Output:
-;     rax - Computed value.
+; Solves AoC day 1 part 2.
+; Parameters:
+;     [in] u8* - Pointer to the input buffer.
+;     [in] u64 - Input buffer size.
+; Results:
+;     [out] u64 - Part 2 solution.
 solve_part2:
-    push rbx
-    push r12
-    push r13
-    push r14
-    push r15
     push rbp
+    push r15
+    push r14
+    push r13
+    push r12
+    push r11
 
     ; Set up the stack
     mov rbp, rsp
-    sub rsp, 16
+    sub rsp, 3 * 8
 
-    %define TOTAL_VALUE rsp + 0
-    %define FIRST_DIGIT rsp + 8
-    %define LAST_DIGIT  rsp + 16
+    %define TOTAL_VALUE rsp + 0 * 8
+    %define FIRST_DIGIT rsp + 1 * 8
+    %define LAST_DIGIT  rsp + 2 * 8
     
     ; Clear out the uninitialized data
     mov QWORD [TOTAL_VALUE], 0
@@ -168,7 +169,7 @@ solve_part2:
     ; r13 - Pointer to the input string.
 
     ; Pointer to input string
-    mov r13, rdi
+    mov r13, rax
 
     ; Iteration counter
     mov r14, 0
@@ -186,13 +187,13 @@ solve_part2:
     jne .not_newline
 
     ; Compute the value for the current line
-    mov rbx, [FIRST_DIGIT]
+    mov r11, [FIRST_DIGIT]
     mov rdi, [LAST_DIGIT]
-    imul rbx, 10
-    add rbx, rdi
+    imul r11, 10
+    add r11, rdi
 
     ; Add computed value to total value and clear the digits
-    add [TOTAL_VALUE], rbx
+    add [TOTAL_VALUE], r11
     mov QWORD [FIRST_DIGIT], 0
     mov QWORD [LAST_DIGIT], 0
 .not_newline:
@@ -206,8 +207,8 @@ solve_part2:
     sub rax, 48
     mov [LAST_DIGIT], rax
 
-    mov rbx, [FIRST_DIGIT]
-    cmp rbx, 0
+    mov r11, [FIRST_DIGIT]
+    cmp r11, 0
     jne .first_number_found
     mov [FIRST_DIGIT], rax
 .first_number_found:
@@ -217,18 +218,18 @@ solve_part2:
     ; mov r12, [digit_strings_len]
     mov r12, 0
 .loop_digit_string_array:
-    lea rdi, [r13 + r14]
-    mov rsi, digit_strings_array
-    mov rsi, [rsi + r12 * 8]
+    lea rax, [r13 + r14]
+    mov rbx, digit_strings_array
+    mov rbx, [rbx + r12 * 8]
     inc r12
 
     call string_starts_with
-    cmp rax, 0
+    cmp rdi, 0
     je .not_a_digit_string
     mov rax, r12
     mov QWORD [LAST_DIGIT], rax
-    mov rbx, [FIRST_DIGIT]
-    cmp rbx, 0
+    mov r11, [FIRST_DIGIT]
+    cmp r11, 0
     jne .first_number_found2
     mov QWORD [FIRST_DIGIT], rax
 .first_number_found2:
@@ -240,60 +241,69 @@ solve_part2:
     inc r14
     jmp .loop_read_input
 .end_of_input:
-    mov rax, QWORD [TOTAL_VALUE]
+    mov rdi, QWORD [TOTAL_VALUE]
 
     mov rsp, rbp
 
-    pop rbp
-    pop r15
-    pop r14
-    pop r13
+    pop r11
     pop r12
-    pop rbx
-
+    pop r13
+    pop r14
+    pop r15
+    pop rbp
     ret
 
 
-; Does what it says.
-; Input:
-;     rdi - Pointer to the input buffer.
-; Output:
-;     None.
+; Solves AoC day 1.
+; Parameters:
+;     [in] Arena* - Pointer to the arena allocator.
+;     [in] u8*    - Pointer to the input buffer.
+;     [in] u64    - Input buffer size.
+; Results:
+;     TODO: [out] u64 - Part 1 solution.
+;     TODO: [out] u64 - Part 2 solution.
 solve_day1:
-    push rbx
-    push r12
+    push r15
+    push r14
+    push r13
 
-    mov r12, rdi
+    mov r15, rbx
+    mov r14, rcx
+
+    ;breakpoint
 
     call print_newline
-    mov rdi, header
-    mov rsi, header_len
+    mov rax, header
+    mov rbx, header_len
     call print_output
 
     ; PART 1
-    mov rdi, r12
+    mov rax, r15
+    mov rbx, r14
     call solve_part1
-    mov rbx, rax
+    mov r13, rdi
 
-    mov rdi, solved_part1 
-    mov rsi, solved_part1_len
+    mov rax, solved_part1 
+    mov rbx, solved_part1_len
     call print_output
-    mov rdi, rbx
+    mov rax, r13
     call print_number
     call print_newline
 
     ; PART 2
-    mov rdi, r12
+    mov rax, r15
+    mov rbx, r14
     call solve_part2
-    mov rbx, rax
+    mov r13, rdi
 
-    mov rdi, solved_part2 
-    mov rsi, solved_part2_len
+    mov rax, solved_part2
+    mov rbx, solved_part2_len
     call print_output
-    mov rdi, rbx
+    mov rax, r13
     call print_number
     call print_newline
 
-    pop r12
-    pop rbx
+    pop r13
+    pop r14
+    pop r15
     ret

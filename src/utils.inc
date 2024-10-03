@@ -20,7 +20,7 @@
 ; |             R(9-15)D           |     R(9-15)W   |        |R(9-15)B|  <- 64 bit R(9-15)
 ; +--------------------------------+----------------+--------+--------+
 
-; C calling conventions:
+; OLD: C calling conventions:
 ;
 ; Function paramater register order:
 ;     rdi, rsi, rdx, rcx, r8, r9
@@ -30,6 +30,22 @@
 ;     rax, rdi, rsi, rdx, rcx, r8, r9, r10, r11
 ; Preserved registers:
 ;     rbx, r12, r13, r14, r15, rsp, rbp
+
+
+; Custom calling conventions:
+;
+; Function paramater register order:
+;     Integer numbers:  rax,  rbx,  rcx,  rdx,  rsi,  rdi,  stack_arg(8 byte aligned),  ...
+;     Floating numbers: xmm0, xmm1, xmm2, xmm3, xmm4, xmm5, stack_arg(16 byte aligned), ...
+;
+; Return registers:
+;     Integer numbers:  rdi,  rsi
+;     Floating numbers: xmm5, xmm4
+;
+; Scratch registers:
+;     rax, rbx, rcx, rdx, rsi, rdi
+; Preserved registers:
+;     r9-r15, xmm6-xmm15
 
 %define breakpoint int3
 

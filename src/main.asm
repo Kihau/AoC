@@ -16,11 +16,11 @@ section .rodata
 section .text
     global main
 
+    ;extern scratch_run
     extern solve_day1
     extern solve_day2
     extern solve_day3
     extern solve_day4
-    extern scratch_run
 
     extern arena_create
     ;extern arena_destroy
@@ -28,52 +28,52 @@ section .text
     extern print_output
     extern exit_program
 
-    extern scratch_run
-
+; TOOD (next commit): 
+;   - Error handling and hardening for utils and os layer. 
+;   - AOC2022 style main logic (days array, input agruments).
+;   - Individual day hardening.
+;   - Day 5
 
 main:
-    push rbp
-    mov rbp, rsp
-
     sub rsp, Arena_size
     mov r15, rsp
 
     ;call scratch_run
 
-    mov rdi, r15
+    mov rax, r15
     call arena_create
 
-    mov rdi, r15
-    mov rsi, input1_path
+    mov rax, r15
+    mov rbx, input1_path
     call read_entire_file
-    mov rdi, rax
-    mov rsi, rdx
+    mov rax, r15
+    mov rbx, rdi
+    mov rcx, rsi
     call solve_day1
 
-    mov rdi, r15
-    mov rsi, input2_path
+    mov rax, r15
+    mov rbx, input2_path
     call read_entire_file
-    mov rdi, rax
-    mov rsi, rdx
+    mov rax, r15
+    mov rbx, rdi
+    mov rcx, rsi
     call solve_day2
 
-    mov rdi, r15
-    mov rsi, input3_path
+    mov rax, r15
+    mov rbx, input3_path
     call read_entire_file 
-    mov rdi, rax
-    mov rsi, rdx
+    mov rax, r15
+    mov rbx, rdi
+    mov rcx, rsi
     call solve_day3
 
-    mov rdi, r15
-    mov rsi, input4_path
+    mov rax, r15
+    mov rbx, input4_path
     call read_entire_file 
-    mov rdi, rax
-    mov rsi, rdx
+    mov rax, r15
+    mov rbx, rdi
+    mov rcx, rsi
     call solve_day4
 
-    mov rdi, 0
+    mov rax, 0
     call exit_program
-
-    mov rsp, rbp
-    pop rbp
-    ret

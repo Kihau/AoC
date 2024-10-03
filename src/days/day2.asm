@@ -42,22 +42,22 @@ section .text
     extern max
 
 
-; Does what it says.
-; Input:
-;     rdi - Pointer to the input buffer.
-; Output:
-;     rax - Computed result for part 1.
-;     rdx - Computed result for part 2.
+; Solves both parts of AoC day 2.
+; Parameters:
+;     [in] u8* - Pointer to the input buffer.
+; Results:
+;     [out] u64 - Part 1 solution.
+;     [out] u64 - Part 2 solution.
 solve_both_parts:
+    push rbp
     push r15
     push r14
     push r13
     push r12
-    push rbx
-    push rbp
+    push r11
 
     mov rbp, rsp
-    sub rsp, 5 * 8
+    sub rsp, 6 * 8
 
     %define computed_value  rsp + 0 * 8
     %define computed_value2 rsp + 1 * 8
@@ -67,7 +67,7 @@ solve_both_parts:
     %define game_invalid    rsp + 5 * 8
 
     ; Input buffer
-    mov r15, rdi
+    mov r15, rax
 
     ; String iteration index
     xor r14, r14
@@ -171,31 +171,31 @@ solve_both_parts:
 
 
 ; --------- Parse string color
-    lea rdi, [r15 + r14]
-    mov rsi, string_red
+    lea rax, [r15 + r14]
+    mov rbx, string_red
     call string_starts_with
-    cmp rax, 0
+    cmp rdi, 0
     jne .red_color_found
 
-    lea rdi, [r15 + r14]
-    mov rsi, string_green
+    lea rax, [r15 + r14]
+    mov rbx, string_green
     call string_starts_with
-    cmp rax, 0
+    cmp rdi, 0
     jne .green_color_found
 
-    lea rdi, [r15 + r14]
-    mov rsi, string_blue
+    lea rax, [r15 + r14]
+    mov rbx, string_blue
     call string_starts_with
-    cmp rax, 0
+    cmp rdi, 0
     jne .blue_color_found
 
     jmp .something_went_wrong
 
 .red_color_found:
-    mov rdi, r12
-    mov rsi, [max_red]
+    mov rax, r12
+    mov rbx, [max_red]
     call max
-    mov [max_red], rax
+    mov [max_red], rdi
 
     add r14, 3
 
@@ -204,10 +204,10 @@ solve_both_parts:
     jmp .color_name_parsed
 
 .green_color_found:
-    mov rdi, r12
-    mov rsi, [max_green]
+    mov rax, r12
+    mov rbx, [max_green]
     call max
-    mov [max_green], rax
+    mov [max_green], rdi
 
     add r14, 5
 
@@ -216,10 +216,10 @@ solve_both_parts:
     jmp .color_name_parsed
 
 .blue_color_found:
-    mov rdi, r12
-    mov rsi, [max_blue]
+    mov rax, r12
+    mov rbx, [max_blue]
     call max
-    mov [max_blue], rax
+    mov [max_blue], rdi
 
     add r14, 4
 
@@ -262,23 +262,23 @@ solve_both_parts:
     jmp .something_went_wrong
 
 .end_of_input:
-    mov rbx, [max_red]
-    imul rbx, [max_green]
-    imul rbx, [max_blue]
+    mov r11, [max_red]
+    imul r11, [max_green]
+    imul r11, [max_blue]
 
-    add [computed_value2], rbx
+    add [computed_value2], r11
 
-    mov rax, [computed_value]
-    mov rdx, [computed_value2]
+    mov rdi, [computed_value]
+    mov rsi, [computed_value2]
     jmp .return_result
 
 .finish_current_game:
-    mov rbx,  [max_red]
-    imul rbx, [max_green]
-    imul rbx, [max_blue]
+    mov r11,  [max_red]
+    imul r11, [max_green]
+    imul r11, [max_blue]
 
     mov rsi, [computed_value2]
-    add rsi, rbx
+    add rsi, r11
     mov [computed_value2], rsi
 
     mov rax, [game_invalid]
@@ -289,60 +289,62 @@ solve_both_parts:
     jmp .parse_next_game
 
 .something_went_wrong:
-    mov rdi, parsing_failed
-    mov rsi, parsing_failed_len
+    mov rax, parsing_failed
+    mov rbx, parsing_failed_len
     call print_error
     call print_newline
 
-    xor rax, rax
-    xor rdx, rdx
+    xor rdi, rdi
+    xor rsi, rsi
 
 .return_result:
     mov rsp, rbp
 
-    pop rbp
-    pop rbx
+    pop r11
     pop r12
     pop r13
     pop r14
     pop r15
+    pop rbp
     ret
 
 
-; Does what it says.
-; Input:
-;     rdi - Pointer to the input buffer.
-; Output:
-;     None.
+; Solves AoC day 2.
+; Parameters:
+;     [in] Arena* - Pointer to the arena allocator.
+;     [in] u8*    - Pointer to the input buffer.
+;     [in] u64    - Input buffer size.
+; Results:
+;     TODO: [out] u64 - Part 1 solution.
+;     TODO: [out] u64 - Part 2 solution.
 solve_day2:
-    push rbx
-    mov rbx, rdi
+    push r15
+    push r14
+
+    mov rax, rbx
+    call solve_both_parts
+    mov r15, rdi
+    mov r14, rsi
 
     call print_newline
-
-    mov rdi, header
-    mov rsi, header_len
+    mov rax, header
+    mov rbx, header_len
     call print_output
 
-    mov rdi, rbx
-    call solve_both_parts
-
-    mov r12, rax
-    mov r13, rdx
-
-    mov rdi, result_part1 
-    mov rsi, result1_len
+    mov rax, result_part1 
+    mov rbx, result1_len
     call print_output
-    mov rdi, r12
+    mov rax, r15
     call print_number
     call print_newline
 
-    mov rdi, result_part2 
-    mov rsi, result2_len
+    mov rax, result_part2 
+    mov rbx, result2_len
     call print_output
-    mov rdi, r13
+    mov rax, r14
     call print_number
     call print_newline
     
-    pop rbx
+    pop r14
+    pop r15
     ret

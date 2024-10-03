@@ -37,531 +37,526 @@ section .text
     extern print_newline
 
 
+; UNUSED
 ; Calculates position from a given index.
 ; Input:
 ;     rdi - Board index.
 ; Output:
 ;     rax - Position on X axis. Returns -1 on error.
 ;     rdx - Position on Y axis. Returns -1 on error.
-index_to_pos:
-    xor rax, rax
-    ret
-
-
-; Parse number that a given index points to.
-; Steps back if index is not the middle of the number and parses it.
-; Given starting index MUST point to a digit.
-; Input:
-;     rdi - Position on X axis.
-;     rsi - Position on Y axis.
-; Output:
-;     rax - Parsed number.
-parse_number_at_pos:
-    push r12
-    push r13
-    push r14
-
-    ; Position X
-    mov r12, rdi
-    ; Position Y
-    mov r13, rsi
-    ; Parsed number.
-    mov r14, 0
-
-.loop_find_start:
-    mov rdi, r12
-    mov rsi, r13
-    call byte_at_pos
-    cmp rax, '0'
-    jl .parse_number
-    cmp rax, '9'
-    jg .parse_number
-    dec r12
-    jmp .loop_find_start
-
-.parse_number:
-    inc r12
-    mov rdi, r12
-    mov rsi, r13
-    call byte_at_pos
-    cmp rax, '0'
-    jl .return_number
-    cmp rax, '9'
-    jg .return_number
-
-    sub rax, '0'
-    imul r14, 10
-    add r14, rax
-    jmp .parse_number
-
-.return_number:
-    mov rax, r14
-
-    pop r14
-    pop r13
-    pop r12
-    ret
-
+; index_to_pos:
+;     xor rax, rax
+;     ret
+; UNSUED:
 ; Calculates index from a given position.
 ; Input:
 ;     rdi - Position on X axis.
 ;     rsi - Position on Y axis.
 ; Output:
 ;     rax - Board index.
-pos_to_index:
-    mov rax, rsi
-    imul rax, [board_width]
-    add rax, rdi
-    ret
-
+; pos_to_index:
+;     mov rax, rsi
+;     imul rax, [board_width]
+;     add rax, rdi
+;     ret
+; UNSUED:
 ; Find how many numbers are adjacent to a symbol at a given position.
-adjacent_numbers_count:
-    ret
+; adjacent_numbers_count:
+;     ret
 
-; Calculate sum of all number adjacent to symbol at given position.
-; Input:
-;     rdi - Position on X axis.
-;     rsi - Position on Y axis.
-; Output:
-;     rax - Calculated sum of adjacent numbers.
-adjacent_numbers_sum:
-    push r12
-    push r13
-    push r14
-
-    ; Stores position X
-    mov r12, rdi
-
-    ; Stores position Y
-    mov r13, rsi
-
-    ; Stores sum of adjacent numbers.
-    xor r14, r14
-
-    ; Check if number is up - middle.
-    mov r9,  r12
-    mov r10, r13
-    dec r10
-
-    mov rdi, r9
-    mov rsi, r10
-    call byte_at_pos
-    ; cmp rax, -1
-    ; je .check_middle
-    cmp rax, '0'
-    jl .check_up_left
-    cmp rax, '9'
-    jg .check_up_left
-
-    mov rdi, r9
-    mov rsi, r10
-    call parse_number_at_pos
-    add r14, rax
-
-    jmp .check_middle_left
-
-.check_up_left:
-    mov r9,  r12
-    mov r10, r13
-    dec r9
-    dec r10
-
-    mov rdi, r9
-    mov rsi, r10
-    call byte_at_pos
-    cmp rax, '0'
-    jl .check_up_right
-    cmp rax, '9'
-    jg .check_up_right
-
-    mov rdi, r9
-    mov rsi, r10
-    call parse_number_at_pos
-    add r14, rax
-
-.check_up_right:
-    mov r9,  r12
-    mov r10, r13
-    inc r9 
-    dec r10
-
-    mov rdi, r9
-    mov rsi, r10
-    call byte_at_pos
-    cmp rax, '0'
-    jl .check_middle_left
-    cmp rax, '9'
-    jg .check_middle_left
-
-    mov rdi, r9
-    mov rsi, r10
-    call parse_number_at_pos
-    add r14, rax
-
-.check_middle_left:
-    mov r9,  r12
-    mov r10, r13
-    dec r9
-
-    mov rdi, r9
-    mov rsi, r10
-    call byte_at_pos
-    cmp rax, '0'
-    jl .check_middle_right
-    cmp rax, '9'
-    jg .check_middle_right
-
-    mov rdi, r9
-    mov rsi, r10
-    call parse_number_at_pos
-    add r14, rax
-
-.check_middle_right:
-    mov r9,  r12
-    mov r10, r13
-    inc r9
-
-    mov rdi, r9
-    mov rsi, r10
-    call byte_at_pos
-    cmp rax, '0'
-    jl .check_down_middle
-    cmp rax, '9'
-    jg .check_down_middle
-
-    mov rdi, r9
-    mov rsi, r10
-    call parse_number_at_pos
-    add r14, rax
-
-.check_down_middle:
-    mov r9,  r12
-    mov r10, r13
-    inc r10
-
-    mov rdi, r9
-    mov rsi, r10
-    call byte_at_pos
-    ; cmp rax, -1
-    ; je .return_result
-    cmp rax, '0'
-    jl .check_down_left
-    cmp rax, '9'
-    jg .check_down_left
-
-    mov rdi, r9
-    mov rsi, r10
-    call parse_number_at_pos
-    add r14, rax
-    jmp .return_result
-
-.check_down_left:
-    mov r9,  r12
-    mov r10, r13
-    dec r9
-    inc r10
-
-    mov rdi, r9
-    mov rsi, r10
-    call byte_at_pos
-    cmp rax, '0'
-    jl .check_down_right
-    cmp rax, '9'
-    jg .check_down_right
-
-    mov rdi, r9
-    mov rsi, r10
-    call parse_number_at_pos
-    add r14, rax
-
-.check_down_right:
-    mov r9,  r12
-    mov r10, r13
-    inc r9
-    inc r10
-
-    mov rdi, r9
-    mov rsi, r10
-    call byte_at_pos
-    cmp rax, '0'
-    jl .return_result
-    cmp rax, '9'
-    jg .return_result
-
-    mov rdi, r9
-    mov rsi, r10
-    call parse_number_at_pos
-    add r14, rax
-
-.return_result:
-    mov rax, r14
-    pop r14
-    pop r13
-    pop r12
-    ret
-
-; NOTE: Could be merged with the function above. 
-;       Function could return two arguments instead of one -
-;       - rax for sum of all and rdx for multiple of two.
-;
-; Calculate multiple of two adjacent numbers to symbol at given position.
-; If there are more than two adjacent numbers - returns 0.
-; Input:
-;     rdi - Position on X axis.
-;     rsi - Position on Y axis.
-; Output:
-;     rax - Calculated multiple of the two adjacent numbers.
-adjacent_numbers_mul:
-    push r12
-    push r13
-    push r14
-    push r15
-
-    ; Stores position X
-    mov r12, rdi
-
-    ; Stores position Y
-    mov r13, rsi
-
-    ; Stores multiple of adjacent two numbers.
-    mov r14, 1
-
-    ; Store how many numbers have been parsed
-    xor r15, r15
-
-    ; Check if number is up - middle.
-    mov r9,  r12
-    mov r10, r13
-    dec r10
-
-    mov rdi, r9
-    mov rsi, r10
-    call byte_at_pos
-    ; cmp rax, -1
-    ; je .check_middle
-    cmp rax, '0'
-    jl .check_up_left
-    cmp rax, '9'
-    jg .check_up_left
-
-    mov rdi, r9
-    mov rsi, r10
-    call parse_number_at_pos
-    imul r14, rax
-    inc r15
-
-    jmp .check_middle_left
-
-.check_up_left:
-    mov r9,  r12
-    mov r10, r13
-    dec r9
-    dec r10
-
-    mov rdi, r9
-    mov rsi, r10
-    call byte_at_pos
-    cmp rax, '0'
-    jl .check_up_right
-    cmp rax, '9'
-    jg .check_up_right
-
-    mov rdi, r9
-    mov rsi, r10
-    call parse_number_at_pos
-    imul r14, rax
-    inc r15
-    cmp r15, 2
-    je .return_result
-
-.check_up_right:
-    mov r9,  r12
-    mov r10, r13
-    inc r9 
-    dec r10
-
-    mov rdi, r9
-    mov rsi, r10
-    call byte_at_pos
-    cmp rax, '0'
-    jl .check_middle_left
-    cmp rax, '9'
-    jg .check_middle_left
-
-    mov rdi, r9
-    mov rsi, r10
-    call parse_number_at_pos
-    imul r14, rax
-    inc r15
-    cmp r15, 2
-    je .return_result
-
-.check_middle_left:
-    mov r9,  r12
-    mov r10, r13
-    dec r9
-
-    mov rdi, r9
-    mov rsi, r10
-    call byte_at_pos
-    cmp rax, '0'
-    jl .check_middle_right
-    cmp rax, '9'
-    jg .check_middle_right
-
-    mov rdi, r9
-    mov rsi, r10
-    call parse_number_at_pos
-    imul r14, rax
-    inc r15
-    cmp r15, 2
-    je .return_result
-
-.check_middle_right:
-    mov r9,  r12
-    mov r10, r13
-    inc r9
-
-    mov rdi, r9
-    mov rsi, r10
-    call byte_at_pos
-    cmp rax, '0'
-    jl .check_down_middle
-    cmp rax, '9'
-    jg .check_down_middle
-
-    mov rdi, r9
-    mov rsi, r10
-    call parse_number_at_pos
-    imul r14, rax
-    inc r15
-    cmp r15, 2
-    je .return_result
-
-.check_down_middle:
-    mov r9,  r12
-    mov r10, r13
-    inc r10
-
-    mov rdi, r9
-    mov rsi, r10
-    call byte_at_pos
-    ; cmp rax, -1
-    ; je .return_result
-    cmp rax, '0'
-    jl .check_down_left
-    cmp rax, '9'
-    jg .check_down_left
-
-    mov rdi, r9
-    mov rsi, r10
-    call parse_number_at_pos
-    imul r14, rax
-    inc r15
-    jmp .return_result
-
-.check_down_left:
-    mov r9,  r12
-    mov r10, r13
-    dec r9
-    inc r10
-
-    mov rdi, r9
-    mov rsi, r10
-    call byte_at_pos
-    cmp rax, '0'
-    jl .check_down_right
-    cmp rax, '9'
-    jg .check_down_right
-
-    mov rdi, r9
-    mov rsi, r10
-    call parse_number_at_pos
-    imul r14, rax
-    inc r15
-    cmp r15, 2
-    je .return_result
-
-.check_down_right:
-    mov r9,  r12
-    mov r10, r13
-    inc r9
-    inc r10
-
-    mov rdi, r9
-    mov rsi, r10
-    call byte_at_pos
-    cmp rax, '0'
-    jl .return_result
-    cmp rax, '9'
-    jg .return_result
-
-    mov rdi, r9
-    mov rsi, r10
-    call parse_number_at_pos
-    imul r14, rax
-    inc r15
-
-.return_result:
-    cmp r15, 2
-    jne .return_zero_instead
-    mov rax, r14
-    jmp .pop_everything
-.return_zero_instead:
-    xor rax, rax
-
-.pop_everything:
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    ret
 
 ; Calculates byte at a given position.
-; Input:
-;     rdi - Position on X axis.
-;     rsi - Position on Y axis.
-; Output:
-;     rax - Byte at given position. Returns -1 on out of bounds.
+; Parameters:
+;     [in] u64 - Position on X axis.
+;     [in] u64 - Position on Y axis.
+; Results:
+;     [out] u64 - Byte at given position. Returns -1 on out of bounds.
 byte_at_pos:
-    cmp rdi, [board_width]
+    cmp rax, [board_width]
     jge .out_of_bounds
 
-    mov rax, rsi
-    imul rax, [board_width]
-    add rax, rdi
+    mov rdi, rbx
+    imul rdi, [board_width]
+    add rdi, rax
 
-    cmp rax, 0
+    cmp rdi, 0
     jl .out_of_bounds
-    cmp rax, [board_size]
+    cmp rdi, [board_size]
     jge .out_of_bounds
 
     xor rdx, rdx
-    mov rsi, [board]
-    mov dl, [rsi + rax]
+    mov rbx, [board]
+    mov dl, [rbx + rdi]
     cmp dl, 0
     je .out_of_bounds
     cmp dl, 10
     je .out_of_bounds
 
-    mov rax, rdx
+    mov rdi, rdx
     ret
 
 .out_of_bounds:
-    mov rax, -1
+    mov rdi, -1
+    ret
+
+
+; Parse number that a given index points to.
+; Steps back if index is not the middle of the number and parses it.
+; Given starting index MUST point to a digit.
+; Parameters:
+;     [in] u64 - Position on X axis.
+;     [in] u64 - Position on Y axis.
+; Results:
+;     [out] u64 - Parsed number.
+parse_number_at_pos:
+    push r15
+    push r14
+    push r13
+
+    mov r15, 0   ; Parsed number.
+    mov r14, rbx ; Position Y
+    mov r13, rax ; Position X
+
+.loop_find_start:
+    mov rax, r13
+    mov rbx, r14
+    call byte_at_pos
+    cmp rdi, '0'
+    jl .parse_number
+    cmp rdi, '9'
+    jg .parse_number
+    dec r13
+    jmp .loop_find_start
+
+.parse_number:
+    inc r13
+    mov rax, r13
+    mov rbx, r14
+    call byte_at_pos
+    cmp rdi, '0'
+    jl .return_number
+    cmp rdi, '9'
+    jg .return_number
+
+    sub rdi, '0'
+    imul r15, 10
+    add r15, rdi
+    jmp .parse_number
+
+.return_number:
+    mov rdi, r15
+
+    pop r13
+    pop r14
+    pop r15
+    ret
+
+
+; Calculate sum of all number adjacent to symbol at a given position.
+; Parameters:
+;     [in] u64 - Position on X axis.
+;     [in] u64 - Position on Y axis.
+; Results:
+;     [out] u64 - Calculated sum of adjacent numbers.
+adjacent_numbers_sum:
+    push r15
+    push r14
+    push r13
+    push r12
+    push r11
+
+    xor r15, r15 ; Stores sum of adjacent numbers.
+    mov r14, rbx ; Stores position Y
+    mov r13, rax ; Stores position X
+
+    ; Check if number is up - middle.
+    mov r12, r14
+    mov r11, r13
+    dec r12
+
+    mov rax, r11
+    mov rbx, r12
+    call byte_at_pos
+    ; cmp rax, -1
+    ; je .check_middle
+    cmp rdi, '0'
+    jl .check_up_left
+    cmp rdi, '9'
+    jg .check_up_left
+
+    mov rax, r11
+    mov rbx, r12
+    call parse_number_at_pos
+    add r15, rdi
+
+    jmp .check_middle_left
+
+.check_up_left:
+    mov r11, r13
+    mov r12, r14
+    dec r11
+    dec r12
+
+    mov rax, r11
+    mov rbx, r12
+    call byte_at_pos
+    cmp rdi, '0'
+    jl .check_up_right
+    cmp rdi, '9'
+    jg .check_up_right
+
+    mov rax, r11
+    mov rbx, r12
+    call parse_number_at_pos
+    add r15, rdi
+
+.check_up_right:
+    mov r11, r13
+    mov r12, r14
+    inc r11 
+    dec r12
+
+    mov rax, r11
+    mov rbx, r12
+    call byte_at_pos
+    cmp rdi, '0'
+    jl .check_middle_left
+    cmp rdi, '9'
+    jg .check_middle_left
+
+    mov rax, r11
+    mov rbx, r12
+    call parse_number_at_pos
+    add r15, rdi
+
+.check_middle_left:
+    mov r11, r13
+    mov r12, r14
+    dec r11
+
+    mov rax, r11
+    mov rbx, r12
+    call byte_at_pos
+    cmp rdi, '0'
+    jl .check_middle_right
+    cmp rdi, '9'
+    jg .check_middle_right
+
+    mov rax, r11
+    mov rbx, r12
+    call parse_number_at_pos
+    add r15, rdi
+
+.check_middle_right:
+    mov r11, r13
+    mov r12, r14
+    inc r11
+
+    mov rax, r11
+    mov rbx, r12
+    call byte_at_pos
+    cmp rdi, '0'
+    jl .check_down_middle
+    cmp rdi, '9'
+    jg .check_down_middle
+
+    mov rax, r11
+    mov rbx, r12
+    call parse_number_at_pos
+    add r15, rdi
+
+.check_down_middle:
+    mov r11, r13
+    mov r12, r14
+    inc r12
+
+    mov rax, r11
+    mov rbx, r12
+    call byte_at_pos
+    ; cmp rax, -1
+    ; je .return_result
+    cmp rdi, '0'
+    jl .check_down_left
+    cmp rdi, '9'
+    jg .check_down_left
+
+    mov rax, r11
+    mov rbx, r12
+    call parse_number_at_pos
+    add r15, rdi
+    jmp .return_result
+
+.check_down_left:
+    mov r11, r13
+    mov r12, r14
+    dec r11
+    inc r12
+
+    mov rax, r11
+    mov rbx, r12
+    call byte_at_pos
+    cmp rdi, '0'
+    jl .check_down_right
+    cmp rdi, '9'
+    jg .check_down_right
+
+    mov rax, r11
+    mov rbx, r12
+    call parse_number_at_pos
+    add r15, rdi
+
+.check_down_right:
+    mov r11, r13
+    mov r12, r14
+    inc r11
+    inc r12
+
+    mov rax, r11
+    mov rbx, r12
+    call byte_at_pos
+    cmp rdi, '0'
+    jl .return_result
+    cmp rdi, '9'
+    jg .return_result
+
+    mov rax, r11
+    mov rbx, r12
+    call parse_number_at_pos
+    add r15, rdi
+
+.return_result:
+    mov rdi, r15
+
+    pop r11
+    pop r12
+    pop r13
+    pop r14
+    pop r15
+    ret
+
+
+; NOTE: Could be merged with the function above. 
+;       Function could return two arguments instead of one -
+;       - One for sum of all and one for multiple of two.
+;
+; Calculate multiple of two adjacent numbers to symbol at given position.
+; If there are more than two adjacent numbers - returns 0.
+; Parameters:
+;     [in] u64 - Position on X axis.
+;     [in] u64 - Position on Y axis.
+; Results:
+;     [out] u64 - Calculated multiple of the two adjacent numbers.
+adjacent_numbers_mul:
+    push r15
+    push r14
+    push r13
+    push r12
+    push r11
+    push r10
+
+    xor r15, r15 ; Store how many numbers have been parsed.
+    mov r14, 1   ; Stores multiple of adjacent two numbers.
+    mov r13, rbx ; Stores position Y.
+    mov r12, rax ; Stores position X.
+
+    ; Check if number is up - middle.
+    mov r10, r12
+    mov r11, r13
+    dec r11
+
+    mov rax, r10
+    mov rbx, r11
+    call byte_at_pos
+    cmp rdi, '0'
+    jl .check_up_left
+    cmp rdi, '9'
+    jg .check_up_left
+
+    mov rax, r10
+    mov rbx, r11
+    call parse_number_at_pos
+    imul r14, rdi
+    inc r15
+    jmp .check_middle_left
+
+.check_up_left:
+    mov r10, r12
+    mov r11, r13
+    dec r10
+    dec r11
+
+    mov rax, r10
+    mov rbx, r11
+    call byte_at_pos
+    cmp rdi, '0'
+    jl .check_up_right
+    cmp rdi, '9'
+    jg .check_up_right
+
+    mov rax, r10
+    mov rbx, r11
+    call parse_number_at_pos
+    imul r14, rdi
+    inc r15
+    cmp r15, 2
+    je .return_result
+
+.check_up_right:
+    mov r10, r12
+    mov r11, r13
+    inc r10 
+    dec r11
+
+    mov rax, r10
+    mov rbx, r11
+    call byte_at_pos
+    cmp rdi, '0'
+    jl .check_middle_left
+    cmp rdi, '9'
+    jg .check_middle_left
+
+    mov rax, r10
+    mov rbx, r11
+    call parse_number_at_pos
+    imul r14, rdi
+    inc r15
+    cmp r15, 2
+    je .return_result
+
+.check_middle_left:
+    mov r10, r12
+    mov r11, r13
+    dec r10
+
+    mov rax, r10
+    mov rbx, r11
+    call byte_at_pos
+    cmp rdi, '0'
+    jl .check_middle_right
+    cmp rdi, '9'
+    jg .check_middle_right
+
+    mov rax, r10
+    mov rbx, r11
+    call parse_number_at_pos
+    imul r14, rdi
+    inc r15
+    cmp r15, 2
+    je .return_result
+
+.check_middle_right:
+    mov r10, r12
+    mov r11, r13
+    inc r10
+
+    mov rax, r10
+    mov rbx, r11
+    call byte_at_pos
+    cmp rdi, '0'
+    jl .check_down_middle
+    cmp rdi, '9'
+    jg .check_down_middle
+
+    mov rax, r10
+    mov rbx, r11
+    call parse_number_at_pos
+    imul r14, rdi
+    inc r15
+    cmp r15, 2
+    je .return_result
+
+.check_down_middle:
+    mov r10, r12
+    mov r11, r13
+    inc r11
+
+    mov rax, r10
+    mov rbx, r11
+    call byte_at_pos
+    cmp rdi, '0'
+    jl .check_down_left
+    cmp rdi, '9'
+    jg .check_down_left
+
+    mov rax, r10
+    mov rbx, r11
+    call parse_number_at_pos
+    imul r14, rdi
+    inc r15
+    jmp .return_result
+
+.check_down_left:
+    mov r10, r12
+    mov r11, r13
+    dec r10
+    inc r11
+
+    mov rax, r10
+    mov rbx, r11
+    call byte_at_pos
+    cmp rdi, '0'
+    jl .check_down_right
+    cmp rdi, '9'
+    jg .check_down_right
+
+    mov rax, r10
+    mov rbx, r11
+    call parse_number_at_pos
+    imul r14, rdi
+    inc r15
+    cmp r15, 2
+    je .return_result
+
+.check_down_right:
+    mov r10, r12
+    mov r11, r13
+    inc r10
+    inc r11
+
+    mov rax, r10
+    mov rbx, r11
+    call byte_at_pos
+    cmp rdi, '0'
+    jl .return_result
+    cmp rdi, '9'
+    jg .return_result
+
+    mov rax, r10
+    mov rbx, r11
+    call parse_number_at_pos
+    imul r14, rdi
+    inc r15
+
+.return_result:
+    cmp r15, 2
+    jne .return_zero_instead
+    mov rdi, r14
+    jmp .pop_everything
+.return_zero_instead:
+    xor rdi, rdi
+
+.pop_everything:
+    pop r10
+    pop r11
+    pop r12
+    pop r13
+    pop r14
+    pop r15
     ret
 
 
 ; Calculates width of the board from input for day 3
-; Input:
-;     rdi - Pointer to the input buffer.
-; Output:
-;     rax - Calculated board width.
+; Parameters:
+;     [in] u8* - Pointer to the input buffer.
+; Results:
+;     [out] u64 - Calculated board width.
 find_board_width:
+    push r15
+    mov r15, rax
     xor rax, rax
 
 .not_new_line:
-    mov dl, [rdi + rax]
+    mov dl, [r15 + rax]
     inc rax,
     cmp dl, 0
     je .found_newline
@@ -570,94 +565,74 @@ find_board_width:
     jmp .not_new_line
 
 .found_newline:
+    mov rdi, rax
+    pop r15
     ret
 
-; Does what it says.
-; Input:
-;     rdi - Pointer to the input buffer.
-;     rsi - Size of the input.
-; Output:
-;     None.
+
+; Solves AoC day 3.
+; Parameters:
+;     [in] Arena* - Pointer to the arena allocator.
+;     [in] u8*    - Pointer to the input buffer.
+;     [in] u64    - Input buffer size.
+; Results:
+;     TODO: [out] u64 - Part 1 solution.
+;     TODO: [out] u64 - Part 2 solution.
 solve_day3:
     push r15
     push r14
     push r13
     push r12
+    push r11
+    push r10
 
-    mov [board], rdi
-    mov [board_size], rsi
-
-    mov rdi, [board]
-    call find_board_width
-    mov [board_width], rax
-
-    ; mov rdi, [board_width]
-    ; call print_number
-    ; call print_newline
-
-    ; Current position X.
-    xor r15, r15
-
-    ; Current position Y.
-    xor r14, r14
-
-    ; Current index offset
-    xor r13, r13
-
-    ; Sum of all numbers adjacent to all symbol (part 1).
-    xor r12, r12
-
-    ; Sum of all calculated values for the '*' symbol (part 2).
-    xor r8, r8
-    push r8
-    
-.board_loop:
-    ; PRINTLN_WITH_NUMBER debug, debug_len, r15
-    ; PRINTLN_WITH_NUMBER debug, debug_len, r14
-    ; PRINTLN_WITH_NUMBER debug, debug_len, r13
-    ; PRINTLN_WITH_NUMBER debug, debug_len, r12
-    ; call print_newline
+    mov [board], rbx
+    mov [board_size], rcx
 
     mov rax, [board]
-    xor rbx, rbx
-    mov bl, [rax + r13]
+    call find_board_width
+    mov [board_width], rdi
 
-    cmp bl, 0
+    xor r15, r15 ; Current position X.
+    xor r14, r14 ; Current position Y.
+    xor r13, r13 ; Current index offset
+    xor r12, r12 ; Sum of all numbers adjacent to all symbol (part 1).
+    xor r11, r11 ; Sum of all calculated values for the '*' symbol (part 2).
+    xor r10, r10 ; Holds current board byte.
+    
+.board_loop:
+    mov rax, [board]
+    mov r10b, [rax + r13]
+
+    cmp r10b, 0
     je .board_end
 
-    cmp bl, 10
+    cmp r10b, 10
     je .board_advance_down
 
-    cmp bl, '.'
+    cmp r10b, '.'
     je .board_advance_right
 
-    cmp bl, '0'
+    cmp r10b, '0'
     jge .check_if_digit
 .not_a_digit:
 
     ; Here we found an actual symbol, it's time to calculate sum of all adjacent numbers.
-    mov rdi, r15
-    mov rsi, r14
+    mov rax, r15
+    mov rbx, r14
     call adjacent_numbers_sum
-    add r12, rax
+    add r12, rdi
 
-    cmp bl, '*'
+    cmp r10b, '*'
     jne .board_advance_right
-    mov rdi, r15
-    mov rsi, r14
+    mov rax, r15
+    mov rbx, r14
     call adjacent_numbers_mul
-    pop r8
-    add r8, rax
-    push r8
-
-    ; DEBUG:
-    ; mov r8, rax
-    ; PRINTLN_WITH_NUMBER debug, debug_len, r8
-    
+    add r11, rdi
     jmp .board_advance_right
 
 .check_if_digit:
-    cmp bl, '9'
+    cmp r10b, '9'
     jle .board_advance_right
     jmp .not_a_digit
     
@@ -673,37 +648,27 @@ solve_day3:
     jmp .board_loop
     
 .board_end:
-    ; mov rdi, 141
-    ; mov rsi, 0
-    ; call byte_at_pos
-    ; mov rdi, rax
-    ; call print_number
-    ; call print_newline
-
-    ; mov rdi, r12
-    ; call print_number
-    ; call print_newline
-
     call print_newline
-    mov rdi, header
-    mov rsi, header_len
+    mov rax, header
+    mov rbx, header_len
     call print_output
 
-    mov rdi, solved_part1
-    mov rsi, solved_part1_len
+    mov rax, solved_part1
+    mov rbx, solved_part1_len
     call print_output
-    mov rdi, r12
+    mov rax, r12
     call print_number
     call print_newline
 
-    mov rdi, solved_part2 
-    mov rsi, solved_part2_len
+    mov rax, solved_part2 
+    mov rbx, solved_part2_len
     call print_output
-    pop r8
-    mov rdi, r8
+    mov rax, r11
     call print_number
     call print_newline
 
+    pop r10
+    pop r11
     pop r12
     pop r13
     pop r14

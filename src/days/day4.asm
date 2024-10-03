@@ -28,19 +28,19 @@ section .text
 
 
 ; Clears the winning number map with zeros.
-; Input:
-;     rdi - Pointer to the map.
-;     rsi - Size of the map (in bytes).
-; Output:
+; Parameters:
+;     [in, out] u8* - Pointer to the map.
+;     [in] u64      - Size of the map (in bytes).
+; Results:
 ;     None.
 zero_clear_map:
-    mov rax, 0
+    mov rdx, 0
 
 .map_clear_loop:
-    cmp rax, rsi
+    cmp rdx, rbx
     jge .map_cleared
-    mov BYTE [rdi + rax], 0
-    inc rax
+    mov BYTE [rax + rdx], 0
+    inc rdx
     jmp .map_clear_loop
 
 .map_cleared:
@@ -48,38 +48,42 @@ zero_clear_map:
 
 
 ; Sets all elements within the cards map to one.
-; Input:
-;     rdi - Pointer to the map.
-;     rsi - Number of elements in the map (4 bytes per element).
-; Output:
+; Parameters:
+;     [in, out] u8* - Pointer to the map.
+;     [in] u64      - Number of elements in the map (4 bytes per element).
+; Results:
 ;     None.
 set_one_map:
-    mov rax, 0
+    mov rdx, 0
 
 .map_clear_loop:
-    cmp rax, rsi
+    cmp rdx, rbx
     jge .map_cleared
-    mov DWORD [rdi + rax * 4], 1
-    inc rax
+    mov DWORD [rax + rdx * 4], 1
+    inc rdx
     jmp .map_clear_loop
 
 .map_cleared:
     ret
 
 
-; Does what it says.
-; Input:
-;     rdi - Pointer to the input buffer.
-;     rsi - Size of the input.
-; Output:
-;     None.
+; Solves AoC day 4.
+; Parameters:
+;     [in] Arena* - Pointer to the arena allocator.
+;     [in] u8*    - Pointer to the input buffer.
+;     [in] u64    - Input buffer size.
+; Results:
+;     TODO: [out] u64 - Part 1 solution.
+;     TODO: [out] u64 - Part 2 solution.
 solve_day4:
     push rbp
     push r15
     push r14
     push r13
     push r12
-    push rbx
+    push r11
+    push r10
+    push r9
 
     %define cards_map_start 0
     %define cards_map_count 300
@@ -93,28 +97,28 @@ solve_day4:
     mov rbp, rsp
     sub rsp, total_size
 
-    mov r15, rdi ; Input buffer.
-    mov r14, rsi ; Input buffer size.
+    mov r15, rbx ; Input buffer.
+    mov r14, rcx ; Input buffer size.
     mov r13, 0   ; Current buffer offset.
     mov r12, 0   ; Player score for a given card.
     mov r11, 0   ; Winning numbers count for a given card.
     mov r10, 0   ; Current card number.
-    mov rbx, 0   ; Total number of points.
+    mov r9,  0   ; Total number of points.
+
+    lea rax, [rsp + winning_map_start]
+    mov rbx, winning_map_size
+    call zero_clear_map
+
+    lea rax, [rsp + cards_map_start]
+    mov rbx, cards_map_count
+    call set_one_map
 
     %define PARSING_CARD_NAME    0
     %define PARSING_WINNING_HAND 1
     %define PARSING_PLAYER_HAND  2
 
-    mov r9, PARSING_CARD_NAME ; Parsing state.
-    mov r8, 0                 ; Parsed number.
-
-    lea rdi, [rsp + winning_map_start]
-    mov rsi, winning_map_size
-    call zero_clear_map
-
-    lea rdi, [rsp + cards_map_start]
-    mov rsi, cards_map_count
-    call set_one_map
+    mov rdi, PARSING_CARD_NAME ; Parsing state.
+    mov rsi, 0                 ; Parsed number.
 
 .input_loop:
     cmp r13, r14
@@ -130,7 +134,7 @@ solve_day4:
     cmp al, ':'
     je .end_of_card_name
 
-    cmp r9, PARSING_CARD_NAME
+    cmp rdi, PARSING_CARD_NAME
     je .input_loop
 
     cmp al, '|'
@@ -147,34 +151,34 @@ solve_day4:
     mov rcx, 0
     mov cl, al
     sub cl, '0'
-    imul r8, 10
-    add r8, rcx
+    imul rsi, 10
+    add rsi, rcx
     jmp .input_loop
 
 
     ; TODO: Check for state changes, where the only allowed changes are:
     ;       PARSING_CARD_NAME -> PARSING_WINNING_HAND -> PARSING_PLAYER_HAND (per one line)
 .skip_whitespace:
-    cmp r8, 0
+    cmp rsi, 0
     je .input_loop
 
-    cmp r9, PARSING_WINNING_HAND
+    cmp rdi, PARSING_WINNING_HAND
     je .handle_winning_number
 
-    cmp r9, PARSING_PLAYER_HAND
+    cmp rdi, PARSING_PLAYER_HAND
     je .handle_player_number
 
     ; TODO: Assert false, unknown program state
 
 .handle_winning_number:
-    ; TODO: Check if r8 is out of the map boundaries.
+    ; TODO: Check if rsi is out of the map boundaries.
     ; Mark number as encounterd in the "winning_map".
-    inc BYTE [rsp + winning_map_start + r8]
-    mov r8, 0 
+    inc BYTE [rsp + winning_map_start + rsi]
+    mov rsi, 0 
     jmp .input_loop
 
 .handle_player_number:
-    cmp BYTE [rsp + winning_map_start + r8], 0
+    cmp BYTE [rsp + winning_map_start + rsi], 0
     je .not_a_winning_number
 
     inc r11
@@ -185,23 +189,23 @@ solve_day4:
     cmove r12, rax
 
 .not_a_winning_number:
-    mov r8, 0 
+    mov rsi, 0 
     jmp .input_loop
 
 
 .end_of_winning_cards:
-    mov r9, PARSING_PLAYER_HAND
-    mov r8, 0 
+    mov rdi, PARSING_PLAYER_HAND
+    mov rsi, 0 
     jmp .input_loop
 
 
 .end_of_card_name:
-    mov r9, PARSING_WINNING_HAND
+    mov rdi, PARSING_WINNING_HAND
     jmp .input_loop
 
 
 .end_of_line:
-    cmp BYTE [rsp + winning_map_start + r8], 0
+    cmp BYTE [rsp + winning_map_start + rsi], 0
     je .not_a_winning_number2
 
     inc r11
@@ -224,18 +228,17 @@ solve_day4:
 .iterate_won_exit_loop:
 
     ; Reset number map
-    lea rdi, [rsp + winning_map_start]
-    mov rsi, winning_map_size
+    lea rax, [rsp + winning_map_start]
+    mov rbx, winning_map_size
     call zero_clear_map
 
-    add rbx, r12
+    add r9, r12
     mov r12, 0
     mov r11, 0
     inc r10
-    mov r9, PARSING_CARD_NAME
-    mov r8, 0 
+    mov rdi, PARSING_CARD_NAME
+    mov rsi, 0 
     jmp .input_loop
-
 
 .input_loop_exit:
     mov rax, 0
@@ -251,27 +254,29 @@ solve_day4:
     mov r12, rdx
 
     call print_newline
-    mov rdi, header
-    mov rsi, header_len
+    mov rax, header
+    mov rbx, header_len
     call print_output
 
-    mov rdi, solved_part1 
-    mov rsi, solved_part1_len
+    mov rax, solved_part1 
+    mov rbx, solved_part1_len
     call print_output
-    mov rdi, rbx
+    mov rax, r9
     call print_number
     call print_newline
 
-    mov rdi, solved_part2 
-    mov rsi, solved_part2_len
+    mov rax, solved_part2 
+    mov rbx, solved_part2_len
     call print_output
-    mov rdi, r12
+    mov rax, r12
     call print_number
     call print_newline
 
     mov rsp, rbp
 
-    pop rbx
+    pop r9
+    pop r10
+    pop r11
     pop r12
     pop r13
     pop r14

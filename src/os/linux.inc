@@ -6,8 +6,10 @@
 ;     rdi, rsi, rdx, r10, r8, r9
 ; Return registers:
 ;     rax, rdx, (some syscalls also modify rcx and r11 registers)
-; Preserved registers:
 ; Volatile registers:
+;     rax, rcx, rdx, rdi, rsi, rdx, r8-r11, xmm0-xmm15
+; Preserved registers:
+;     rbx, rbp, rsp, r12-r15
 ;
 ;
 ;     Memory layout:
@@ -37,17 +39,20 @@
 
 ; Linux system calls codes.
 ; Passed to the rax register.
-%define SYS_READ   0
-%define SYS_WRITE  1
-%define SYS_OPEN   2
-%define SYS_CLOSE  3
-%define SYS_STAT   4
-%define SYS_FSTAT  5
-%define SYS_LSTAT  6
-%define SYS_MMAP   9
-%define SYS_MUNMAP 11 
-%define SYS_BRK    12
-%define SYS_EXIT   60
+%define SYS_READ     0
+%define SYS_WRITE    1
+%define SYS_OPEN     2
+%define SYS_CLOSE    3
+%define SYS_STAT     4
+%define SYS_FSTAT    5
+%define SYS_LSTAT    6
+%define SYS_POLL     7
+%define SYS_LSEEK    8
+%define SYS_MMAP     9
+%define SYS_MPROTECT 10
+%define SYS_MUNMAP   11 
+%define SYS_BRK      12
+%define SYS_EXIT     60
 
 %define STDIN  0 
 %define STDOUT 1
